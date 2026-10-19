@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Savage Worlds: Edycja Przygodowa — Kreator i Karta Postaci</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ======================================================================
+       NAGŁÓWEK APLIKACJI
+       ====================================================================== -->
+  <header class="sw-header">
+    <div class="sw-header-container">
+      <div class="sw-brand">
+        <div class="sw-logo-badge">SAVAGE WORLDS</div>
+        <div class="sw-brand-text">
+          <h1>Edycja Przygodowa</h1>
+          <span>Kreator & Karta Postaci SWEP</span>
+        </div>
+      </div>
+
+      <!-- Zakładki główne -->
+      <nav class="sw-nav-tabs">
+        <button class="sw-tab-btn active" data-view="view-wizard">
+          <span>🧙</span> Kreator (Krok po kroku)
+        </button>
+        <button class="sw-tab-btn" data-view="view-sheet">
+          <span>📜</span> Karta Postaci (Arkusz)
+        </button>
+        <button class="sw-tab-btn" data-view="view-archetypes">
+          <span>🎭</span> Gotowe Archetypy
+        </button>
+      </nav>
+
+      <!-- Przyciski akcji -->
+      <div class="sw-header-actions">
+        <button class="sw-btn" id="btn-new-char" title="Zacznij nową postać">
+          <span>➕</span> Nowa
+        </button>
+        <button class="sw-btn" id="btn-open-manager" title="Zarządzaj zapisanymi postaciami">
+          <span>👥</span> Postacie (<span id="saved-count">0</span>)
+        </button>
+        <button class="sw-btn btn-primary" id="btn-save-char" title="Zapisz do pamięci przeglądarki">
+          <span>💾</span> Zapisz
+        </button>
+        <button class="sw-btn" id="btn-export-json" title="Pobierz plik postaci .json">
+          <span>⬇️</span> JSON
+        </button>
+        <label class="sw-btn" title="Wczytaj postać z pliku .json" style="cursor: pointer;">
+          <span>⬆️</span> Wczytaj
+          <input type="file" id="input-import-json" accept=".json" style="display: none;">
+        </label>
+        <button class="sw-btn btn-success" id="btn-print" title="Wydrukuj kartę lub zapisz jako PDF">
+          <span>🖨️</span> Drukuj / PDF
+        </button>
+        <button class="sw-btn" id="btn-toggle-theme" title="Przełącz motyw (pergaminowy / do czarno-białego druku)">
+          <span>🌓</span> Motyw
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================================
+       GŁÓWNA ZAWARTOŚĆ
+       ====================================================================== -->
+  <main class="sw-main-content">
+
+    <!-- ====================================================================
+         WIDOK 1: KREATOR POSTACI (WIZARD)
+         ==================================================================== -->
+    <section id="view-wizard" class="sw-view active">
+      
+      <!-- Pasek aktywnych podręczników i dodatków (Filtr globalny) -->
+      <div class="sw-modules-bar">
+        <div class="modules-bar-title">
+          <span class="modules-bar-icon">📚</span>
+          <strong>Aktywne podręczniki i dodatki:</strong>
+        </div>
+        <div class="modules-bar-toggles">
+          <label class="module-chip is-active is-locked" title="Podręcznik Główny SWEP (zawsze aktywny)">
+            <input type="checkbox" id="mod-toggle-swep" checked disabled>
+            <span class="chip-icon">📘</span>
+            <span class="chip-name">SWEP (Podręcznik Główny)</span>
+            <span class="chip-badge">Główny</span>
+          </label>
+          <label class="module-chip" id="lbl-toggle-horror" title="Horror Companion: Potworni Bohaterowie, nowe Zawady, Przewagi Grozy, Alchemia, ZN, rytuały, nowe moce i poczytalność">
+            <input type="checkbox" id="mod-toggle-horror">
+            <span class="chip-icon">🦇</span>
+            <span class="chip-name">Horror Companion</span>
+            <span class="chip-badge" id="status-badge-horror">Wyłączony</span>
+          </label>
+          <label class="module-chip" id="lbl-toggle-fantasy" title="Fantasy Companion: 25+ fantastycznych ras, Bard, Druid, Kleryk, Magia bitewna, chowańce, rynsztunek i pancerze fantasy">
+            <input type="checkbox" id="mod-toggle-fantasy">
+            <span class="chip-icon">🐉</span>
+            <span class="chip-name">Fantasy Companion</span>
+            <span class="chip-badge" id="status-badge-fantasy">Wyłączony</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Pływający pasek stanu punktów -->
+      <div class="wizard-tracker">
+        <div class="tracker-badges">
+          <div class="tracker-badge" id="badge-attr">
+            <span class="label">Punkty Cech:</span>
+            <span class="value" id="val-attr-points">5 / 5</span>
+          </div>
+          <div class="tracker-badge" id="badge-skill">
+            <span class="label">Punkty Umiejętności:</span>
+            <span class="value" id="val-skill-points">12 / 12</span>
+          </div>
+          <div class="tracker-badge" id="badge-hindrance">
+            <span class="label">Punkty z Zawad:</span>
+            <span class="value" id="val-hindrance-points">0 / 4 (Wydano: 0)</span>
+          </div>
+          <div class="tracker-badge" id="badge-funds">
+            <span class="label">Gotówka:</span>
+            <span class="value" id="val-funds">$500</span>
+          </div>
+        </div>
+
+        <div>
+          <button class="sw-btn btn-primary" id="btn-wizard-to-sheet">
+            <span>👁️</span> Zobacz gotową kartę
+          </button>
+        </div>
+      </div>
+
+      <!-- Pasek kroków kreatora -->
+      <div class="wizard-steps-nav">
+        <button class="step-nav-btn active" data-step="1">1. Koncepcja & Rasa</button>
+        <button class="step-nav-btn" data-step="2">2. Zawady</button>
+        <button class="step-nav-btn" data-step="3">3. Cechy (Atrybuty)</button>
+        <button class="step-nav-btn" data-step="4">4. Umiejętności</button>
+        <button class="step-nav-btn" data-step="5">5. Przewagi</button>
+        <button class="step-nav-btn" data-step="6">6. Sprzęt & Ekwipunek</button>
+        <button class="step-nav-btn" data-step="7">7. Moce (ZN)</button>
+        <button class="step-nav-btn" data-step="8">8. Podsumowanie</button>
+      </div>
+
+      <!-- KROK 1: Koncepcja i Rasa -->
+      <div class="wizard-step-pane active" id="wizard-step-1">
+        <div class="step-header">
+          <div>
+            <h2>Krok 1: Koncepcja i Rasa postaci</h2>
+            <p>Określ kim jest twój bohater i wybierz jego rasę z podręcznika, zyskując unikalne właściwości rasowe.</p>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="char-name">Imię postaci:</label>
+            <input type="text" id="char-name" class="form-control" placeholder="np. Goran Żelaznoręki" value="">
+          </div>
+          <div class="form-group">
+            <label for="char-concept">Koncepcja postaci / Archetyp:</label>
+            <input type="text" id="char-concept" class="form-control" placeholder="np. Były najemnik, leśny zwiadowca, rewolwerowiec..." value="">
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label for="char-gender">Płeć / Wiek:</label>
+            <input type="text" id="char-gender" class="form-control" placeholder="np. Mężczyzna, 28 lat">
+          </div>
+          <div class="form-group">
+            <label for="char-appearance">Wzrost / Waga / Wygląd:</label>
+            <input type="text" id="char-appearance" class="form-control" placeholder="np. 185 cm, 88 kg, krzepka budowa, blizna na oku">
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <h3 style="font-family: var(--font-heading); color: var(--sw-ink); margin: 0;">Wybierz Rasę / Pochodzenie:</h3>
+          <div class="catalog-module-filters" id="races-module-filters" style="margin: 0;">
+            <button type="button" class="chip-filter-btn active" data-race-mod="all">Wszystkie aktywne</button>
+            <button type="button" class="chip-filter-btn" data-race-mod="swep">📘 SWEP</button>
+            <button type="button" class="chip-filter-btn" data-race-mod="horror">🦇 Horror</button>
+            <button type="button" class="chip-filter-btn" data-race-mod="fantasy">🐉 Fantasy</button>
+          </div>
+        </div>
+        <div class="races-grid" id="races-selection-grid">
+          <!-- Wypełniane dynamicznie przez JS -->
+        </div>
+
+        <div class="wizard-footer">
+          <div></div>
+          <button class="sw-btn btn-primary btn-next-step" data-target="2">Krok 2: Zawady ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 2: Zawady -->
+      <div class="wizard-step-pane" id="wizard-step-2">
+        <div class="step-header">
+          <div>
+            <h2>Krok 2: Zawady postaci</h2>
+            <p>Wybierz wady, które nadają postaci głębię. Drobna Zawada daje 1 punkt, Poważna 2 punkty (maksymalnie 4 punkty do zdobycia).</p>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-family: var(--font-heading); margin: 0;">Dostępne Zawady:</h3>
+              <div class="catalog-module-filters" id="hindrances-module-filters" style="margin: 0;">
+                <button type="button" class="chip-filter-btn active" data-hind-mod="all">Wszystkie</button>
+                <button type="button" class="chip-filter-btn" data-hind-mod="swep">📘 SWEP</button>
+                <button type="button" class="chip-filter-btn" data-hind-mod="horror">🦇 Horror</button>
+                <button type="button" class="chip-filter-btn" data-hind-mod="fantasy">🐉 Fantasy</button>
+              </div>
+            </div>
+            <input type="text" id="filter-hindrances" class="form-control" placeholder="🔍 Szukaj zawady..." style="margin-bottom: 10px;">
+            <div id="hindrances-catalog-list" style="max-height: 380px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+              <!-- Dynamicznie generowane -->
+            </div>
+          </div>
+
+          <div>
+            <h3 style="font-family: var(--font-heading); margin-bottom: 10px;">Wybrane Zawady (Maks. 4 punkty):</h3>
+            <div id="selected-hindrances-box" style="min-height: 140px; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff; margin-bottom: 15px;">
+              <!-- Wybrane zawady -->
+            </div>
+
+            <!-- Panel wymiany punktów z Zawad -->
+            <div class="hindrance-exchange-box">
+              <h4 style="font-family: var(--font-heading); color: var(--sw-red); margin-bottom: 6px;">Wymień zdobyte punkty z Zawad:</h4>
+              <p style="font-size: 0.85rem; color: var(--sw-ink-light); margin-bottom: 10px;">
+                Zgodnie z podręcznikiem SWEP, punkty z Zawad możesz wydać na:
+              </p>
+
+              <div class="exchange-options">
+                <div class="exchange-card">
+                  <div>
+                    <strong>+1 Kostka Cechy</strong>
+                    <div style="font-size: 0.78rem; color: #666;">Koszt: 2 punkty</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <button class="sw-btn" id="btn-spend-attr-minus">-</button>
+                    <span id="spend-attr-val" style="font-weight: bold; width: 20px; text-align: center;">0</span>
+                    <button class="sw-btn" id="btn-spend-attr-plus">+</button>
+                  </div>
+                </div>
+
+                <div class="exchange-card">
+                  <div>
+                    <strong>+1 Dodatkowa Przewaga</strong>
+                    <div style="font-size: 0.78rem; color: #666;">Koszt: 2 punkty</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <button class="sw-btn" id="btn-spend-edge-minus">-</button>
+                    <span id="spend-edge-val" style="font-weight: bold; width: 20px; text-align: center;">0</span>
+                    <button class="sw-btn" id="btn-spend-edge-plus">+</button>
+                  </div>
+                </div>
+
+                <div class="exchange-card">
+                  <div>
+                    <strong>+1 Punkt Umiejętności</strong>
+                    <div style="font-size: 0.78rem; color: #666;">Koszt: 1 punkt</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <button class="sw-btn" id="btn-spend-skill-minus">-</button>
+                    <span id="spend-skill-val" style="font-weight: bold; width: 20px; text-align: center;">0</span>
+                    <button class="sw-btn" id="btn-spend-skill-plus">+</button>
+                  </div>
+                </div>
+
+                <div class="exchange-card">
+                  <div>
+                    <strong>+ Podwojenie funduszy (+$500)</strong>
+                    <div style="font-size: 0.78rem; color: #666;">Koszt: 1 punkt</div>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <button class="sw-btn" id="btn-spend-funds-minus">-</button>
+                    <span id="spend-funds-val" style="font-weight: bold; width: 20px; text-align: center;">0</span>
+                    <button class="sw-btn" id="btn-spend-funds-plus">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="1">⬅ Krok 1: Rasa</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="3">Krok 3: Cechy ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 3: Cechy (Atrybuty) -->
+      <div class="wizard-step-pane" id="wizard-step-3">
+        <div class="step-header">
+          <div>
+            <h2>Krok 3: Cechy główne (Atrybuty)</h2>
+            <p>Każda cecha zaczyna od k4. Rozdziel 5 punktów (1 punkt = +1 rodzaj kostki). Koszt nie może przekroczyć puli punktów.</p>
+          </div>
+        </div>
+
+        <div class="attributes-container" id="attributes-creator-container">
+          <!-- Wypełniane dynamicznie przez JS -->
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="2">⬅ Krok 2: Zawady</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="4">Krok 4: Umiejętności ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 4: Umiejętności -->
+      <div class="wizard-step-pane" id="wizard-step-4">
+        <div class="step-header">
+          <div>
+            <h2>Krok 4: Umiejętności</h2>
+            <p>5 umiejętności podstawowych (Wysportowanie, Wiedza ogólna, Spostrzegawczość, Przekonywanie, Skradanie) zaczyna od <strong>k4 za darmo</strong>. Masz 12 punktów do rozdania. Koszt wynosi 1 punkt za stopień kości do poziomu powiązanej cechy, oraz 2 punkty za każdy stopień powyżej cechy!</p>
+          </div>
+        </div>
+
+        <!-- Pasek wyszukiwania i filtry kategorii umiejętności -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+          <div style="flex: 1; min-width: 260px; max-width: 450px;">
+            <input type="text" id="filter-skills-text" class="form-control" placeholder="🔍 Szukaj umiejętności z podręcznika...">
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="skills-filter-buttons">
+            <button class="sw-btn skill-filter-btn active" data-cat="all">Wszystkie (32)</button>
+            <button class="sw-btn skill-filter-btn" data-cat="core">Podstawowe (5)</button>
+            <button class="sw-btn skill-filter-btn" data-cat="learned">Tylko wykupione</button>
+            <button class="sw-btn skill-filter-btn" data-cat="zrecznosc">Zręczność (Walka, Strzelanie...)</button>
+            <button class="sw-btn skill-filter-btn" data-cat="spryt">Spryt (Wiedza, Leczenie...)</button>
+            <button class="sw-btn skill-filter-btn" data-cat="duch">Duch (Społeczne)</button>
+            <button class="sw-btn skill-filter-btn" data-cat="arcane">Moce (ZN)</button>
+          </div>
+        </div>
+
+        <div class="skills-table-container">
+          <table class="skills-table" id="skills-creator-table">
+            <thead>
+              <tr>
+                <th style="width: 320px;">Umiejętność z podręcznika</th>
+                <th style="width: 140px;">Cecha powiązana</th>
+                <th>Wybór poziomu kości</th>
+                <th style="width: 110px; text-align: center;">Koszt w pkt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Wypełniane dynamicznie przez JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Dodawanie własnej umiejętności -->
+        <div style="background: #fff; padding: 12px; border: 1px dashed var(--sw-border); border-radius: 6px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <strong>Dodaj nową / niestandardową umiejętność:</strong>
+          <input type="text" id="custom-skill-name" class="form-control" placeholder="Nazwa umiejętności" style="max-width: 200px;">
+          <select id="custom-skill-attr" class="form-control" style="max-width: 150px;">
+            <option value="zrecznosc">Zręczność</option>
+            <option value="spryt">Spryt</option>
+            <option value="duch">Duch</option>
+            <option value="sila">Siła</option>
+            <option value="wigor">Wigor</option>
+          </select>
+          <button class="sw-btn btn-primary" id="btn-add-custom-skill">Dodaj umiejętność</button>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="3">⬅ Krok 3: Cechy</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="5">Krok 5: Przewagi ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 5: Przewagi -->
+      <div class="wizard-step-pane" id="wizard-step-5">
+        <div class="step-header">
+          <div>
+            <h2>Krok 5: Przewagi</h2>
+            <p>Wybierz Przewagi, na które postać spełnia Wymagania (Ranga Nowicjusz, odpowiednie cechy lub inne przewagi). Posiadasz darmową Przewagę dla Człowieka oraz te wykupione za punkty z Zawad.</p>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="filter-edges-text" class="form-control" placeholder="🔍 Szukaj przewagi..." style="min-width: 180px;">
+            <select id="filter-edges-category" class="form-control">
+              <option value="all">Wszystkie kategorie</option>
+              <option value="Wrodzone">Wrodzone / Tła</option>
+              <option value="Bojowe">Bojowe</option>
+              <option value="Przywódcze">Przywódcze</option>
+              <option value="Nadprzyrodzone">Nadprzyrodzone / Mocy</option>
+              <option value="Społeczne">Społeczne</option>
+              <option value="Zawodowe">Zawodowe / Profesjonalne</option>
+              <option value="Dziwne">Dziwne</option>
+              <option value="Potworne">Potworne</option>
+              <option value="Legendarne">Legendarne</option>
+            </select>
+            <select id="filter-edges-module" class="form-control">
+              <option value="all">Wszystkie dodatki</option>
+              <option value="swep">📘 SWEP</option>
+              <option value="horror">🦇 Horror</option>
+              <option value="fantasy">🐉 Fantasy</option>
+            </select>
+          </div>
+          <div id="edges-budget-indicator" style="font-weight: bold; color: var(--sw-red);">
+            Dostępne wolne Przewagi: <span id="val-free-edges">0</span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Katalog Przewag z podręcznika:</h4>
+            <div id="edges-catalog-list" style="max-height: 420px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+              <!-- Dynamicznie -->
+            </div>
+          </div>
+
+          <div>
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Wybrane Przewagi postaci:</h4>
+            <div id="selected-edges-box" style="min-height: 180px; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+              <!-- Wybrane -->
+            </div>
+
+            <!-- Dodaj własną przewagę -->
+            <div style="margin-top: 15px; padding: 10px; background: #fff9e6; border: 1px solid var(--sw-gold); border-radius: 4px;">
+              <strong>Dodaj własną Przewagę (Custom):</strong>
+              <input type="text" id="custom-edge-name" class="form-control" placeholder="Nazwa przewagi" style="margin: 6px 0;">
+              <input type="text" id="custom-edge-desc" class="form-control" placeholder="Działanie / opis" style="margin-bottom: 6px;">
+              <button class="sw-btn" id="btn-add-custom-edge">Dodaj własną przewagę</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="4">⬅ Krok 4: Umiejętności</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="6">Krok 6: Sprzęt ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 6: Ekwipunek i Pieniądze -->
+      <div class="wizard-step-pane" id="wizard-step-6">
+        <div class="step-header">
+          <div>
+            <h2>Krok 6: Ekwipunek i Sprzęt</h2>
+            <p>Zrób zakupy ze startowego budżetu ($500). Pamiętaj o Udźwigu (Maksymalne obciążenie = Siła × 5 funtów/kg).</p>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="sw-btn equip-cat-btn active" data-cat="weapons_melee">Broń biała</button>
+            <button class="sw-btn equip-cat-btn" data-cat="weapons_ranged">Broń strzelecka</button>
+            <button class="sw-btn equip-cat-btn" data-cat="armor">Pancerze i hełmy</button>
+            <button class="sw-btn equip-cat-btn" data-cat="shields">Tarcze</button>
+            <button class="sw-btn equip-cat-btn" data-cat="gear">Przybory i ekwipunek</button>
+          </div>
+          <div style="font-weight: bold;">
+            Stan portfela: <span id="equip-funds-display" style="color: var(--sw-red); font-size: 1.1rem;">$500</span> |
+            Udźwig: <span id="equip-weight-display">0 / 30 kg</span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+              <h4 style="font-family: var(--font-heading); margin: 0;">Katalog sklepowy:</h4>
+              <div class="catalog-module-filters" id="equip-module-filters" style="margin: 0;">
+                <button type="button" class="chip-filter-btn active" data-equip-mod="all">Wszystkie</button>
+                <button type="button" class="chip-filter-btn" data-equip-mod="swep">📘 SWEP</button>
+                <button type="button" class="chip-filter-btn" data-equip-mod="horror">🦇 Horror</button>
+                <button type="button" class="chip-filter-btn" data-equip-mod="fantasy">🐉 Fantasy</button>
+              </div>
+            </div>
+            <div id="equipment-catalog-list" style="max-height: 420px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+              <!-- Dynamicznie -->
+            </div>
+          </div>
+
+          <div>
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Twój Ekwipunek i Broń:</h4>
+            <div id="selected-equipment-box" style="min-height: 220px; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+              <!-- Wybrany sprzęt -->
+            </div>
+
+            <!-- Dodaj własny przedmiot -->
+            <div style="margin-top: 15px; padding: 10px; background: #fff; border: 1px solid var(--sw-border-light); border-radius: 4px;">
+              <strong>Dodaj własny przedmiot:</strong>
+              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 6px; margin: 6px 0;">
+                <input type="text" id="custom-item-name" class="form-control" placeholder="Nazwa">
+                <input type="number" id="custom-item-weight" class="form-control" placeholder="Waga" value="1">
+                <input type="number" id="custom-item-cost" class="form-control" placeholder="Koszt $" value="10">
+              </div>
+              <button class="sw-btn" id="btn-add-custom-item">Dodaj przedmiot</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="5">⬅ Krok 5: Przewagi</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="7">Krok 7: Moce (ZN) ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 7: Moce (ZN) -->
+      <div class="wizard-step-pane" id="wizard-step-7">
+        <div class="step-header">
+          <div>
+            <h2>Krok 7: Zdolności Nadprzyrodzone i Moce</h2>
+            <p>Jeśli postać posiada Przewagę <em>Zdolności nadprzyrodzone</em> lub <em>Pochodzenie Niesamowite</em>, wybiera tutaj startowe Moce (zwykle 3 moce i 10-15 Punktów Mocy).</p>
+          </div>
+        </div>
+
+        <div id="arcane-locked-message" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+          ℹ️ Postać nie posiada obecnie Przewagi <strong>Zdolności nadprzyrodzone / Pochodzenie Niesamowite</strong>. Możesz przejść dalej do podsumowania lub cofnąć się do Kroku 5 i wybrać odpowiednią Przewagę.
+        </div>
+
+        <div id="arcane-active-container">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <input type="text" id="filter-powers-text" class="form-control" placeholder="🔍 Szukaj mocy..." style="max-width: 200px;">
+              <div class="catalog-module-filters" id="powers-module-filters" style="margin: 0;">
+                <button type="button" class="chip-filter-btn active" data-power-mod="all">Wszystkie</button>
+                <button type="button" class="chip-filter-btn" data-power-mod="swep">📘 SWEP</button>
+                <button type="button" class="chip-filter-btn" data-power-mod="horror">🦇 Horror</button>
+                <button type="button" class="chip-filter-btn" data-power-mod="fantasy">🐉 Fantasy</button>
+              </div>
+            </div>
+            <div style="font-weight: bold; color: #6a1b9a;">
+              Punkty Mocy: <span id="val-power-points">10 PM</span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div>
+              <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Księga Mocy z podręcznika:</h4>
+              <div id="powers-catalog-list" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+                <!-- Moce -->
+              </div>
+            </div>
+
+            <div>
+              <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Znane Moce postaci:</h4>
+              <div id="selected-powers-box" style="min-height: 200px; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+                <!-- Wybrane moce -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="6">⬅ Krok 6: Sprzęt</button>
+          <button class="sw-btn btn-primary btn-next-step" data-target="8">Krok 8: Podsumowanie ➔</button>
+        </div>
+      </div>
+
+      <!-- KROK 8: Podsumowanie -->
+      <div class="wizard-step-pane" id="wizard-step-8">
+        <div class="step-header">
+          <div>
+            <h2>Krok 8: Podsumowanie i Gotowa Karta</h2>
+            <p>Twoja postać jest gotowa do wejścia w Dzikie Światy! Sprawdź wyliczone statystyki i przejdź do arkusza.</p>
+          </div>
+        </div>
+
+        <div id="wizard-summary-content" style="background: #fff; padding: 20px; border-radius: 6px; border: 1px solid var(--sw-border-light); line-height: 1.6;">
+          <!-- Podsumowanie -->
+        </div>
+
+        <div class="wizard-footer">
+          <button class="sw-btn btn-prev-step" data-target="7">⬅ Krok 7: Moce</button>
+          <button class="sw-btn btn-success" id="btn-finish-wizard">
+            <span>🎉</span> Otwórz pełną Kartę Postaci (SWEP)
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         WIDOK 2: OFICJALNA KARTA POSTACI (SWEP CHARACTER SHEET)
+         Wierne odwzorowanie SWEP_karta3.pdf
+         ==================================================================== -->
+    <section id="view-sheet" class="sw-view">
+      
+      <div class="sw-sheet-wrapper">
+        
+        <!-- STRONA 1: GŁÓWNA KARTA POSTACI -->
+        <div class="sw-sheet-page" id="sheet-page-1">
+          
+          <!-- Górny pasek: LOGO I TYTUŁ SWEP -->
+          <div class="sheet-main-header">
+            <div class="sheet-logo-block">
+              <span class="sheet-logo-main">SAVAGE WORLDS</span>
+              <span class="sheet-logo-sub">EDYCJA PRZYGODOWA</span>
+            </div>
+            <div class="sheet-header-title">
+              OFICJALNA KARTA POSTACI
+            </div>
+          </div>
+          
+          <!-- Górny pasek: ATRYBUTY | DANE & POCHODNE | ZAWADY & ROZWINIĘCIA -->
+          <div class="sheet-top-grid">
+            
+            <!-- Lewa kolumna: ATRYBUTY -->
+            <div class="sheet-left-col">
+              <div class="sw-tape-note sheet-attr-box">
+                <h3>ATRYBUTY</h3>
+                <div class="sheet-attr-list">
+                  <div class="sheet-attr-item">
+                    <span class="sheet-attr-name">ZRĘCZNOŚĆ</span>
+                    <div class="sheet-dice-track" data-attr="zrecznosc">
+                      <span class="sheet-die-step" data-die="k4">4</span>
+                      <span class="sheet-die-step" data-die="k6">6</span>
+                      <span class="sheet-die-step" data-die="k8">8</span>
+                      <span class="sheet-die-step" data-die="k10">10</span>
+                      <span class="sheet-die-step" data-die="k12">12</span>
+                    </div>
+                  </div>
+
+                  <div class="sheet-attr-item">
+                    <span class="sheet-attr-name">SPRYT</span>
+                    <div class="sheet-dice-track" data-attr="spryt">
+                      <span class="sheet-die-step" data-die="k4">4</span>
+                      <span class="sheet-die-step" data-die="k6">6</span>
+                      <span class="sheet-die-step" data-die="k8">8</span>
+                      <span class="sheet-die-step" data-die="k10">10</span>
+                      <span class="sheet-die-step" data-die="k12">12</span>
+                    </div>
+                  </div>
+
+                  <div class="sheet-attr-item">
+                    <span class="sheet-attr-name">DUCH</span>
+                    <div class="sheet-dice-track" data-attr="duch">
+                      <span class="sheet-die-step" data-die="k4">4</span>
+                      <span class="sheet-die-step" data-die="k6">6</span>
+                      <span class="sheet-die-step" data-die="k8">8</span>
+                      <span class="sheet-die-step" data-die="k10">10</span>
+                      <span class="sheet-die-step" data-die="k12">12</span>
+                    </div>
+                  </div>
+
+                  <div class="sheet-attr-item">
+                    <span class="sheet-attr-name">SIŁA</span>
+                    <div class="sheet-dice-track" data-attr="sila">
+                      <span class="sheet-die-step" data-die="k4">4</span>
+                      <span class="sheet-die-step" data-die="k6">6</span>
+                      <span class="sheet-die-step" data-die="k8">8</span>
+                      <span class="sheet-die-step" data-die="k10">10</span>
+                      <span class="sheet-die-step" data-die="k12">12</span>
+                    </div>
+                  </div>
+
+                  <div class="sheet-attr-item">
+                    <span class="sheet-attr-name">WIGOR</span>
+                    <div class="sheet-dice-track" data-attr="wigor">
+                      <span class="sheet-die-step" data-die="k4">4</span>
+                      <span class="sheet-die-step" data-die="k6">6</span>
+                      <span class="sheet-die-step" data-die="k8">8</span>
+                      <span class="sheet-die-step" data-die="k10">10</span>
+                      <span class="sheet-die-step" data-die="k12">12</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Poniżej atrybutów: UMIEJĘTNOŚCI -->
+              <div class="sw-tape-note sheet-skills-box" style="margin-top: 20px;">
+                <h3>UMIEJĘTNOŚCI</h3>
+                <div id="sheet-skills-render-list" style="display: flex; flex-direction: column; gap: 6px;">
+                  <!-- Dynamicznie -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Środkowa kolumna: DANE, STATYSTYKI POCHODNE, SPRZĘT -->
+            <div class="sheet-center-col">
+              
+              <!-- Metryczka postaci -->
+              <div class="sheet-bio-fields">
+                <div class="sheet-bio-field" style="grid-column: span 2;">
+                  <span class="sheet-bio-label">IMIĘ:</span>
+                  <span class="sheet-bio-val" id="sheet-name">—</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">RASA:</span>
+                  <span class="sheet-bio-val" id="sheet-race">—</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">RANGA:</span>
+                  <span class="sheet-bio-val" id="sheet-rank">Nowicjusz (N)</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">ROZMIAR:</span>
+                  <span class="sheet-bio-val" id="sheet-size">0</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">FUKSY:</span>
+                  <span class="sheet-bio-val" id="sheet-bennies">3</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">WZROST:</span>
+                  <span class="sheet-bio-val" id="sheet-height">—</span>
+                </div>
+                <div class="sheet-bio-field">
+                  <span class="sheet-bio-label">WAGA:</span>
+                  <span class="sheet-bio-val" id="sheet-weight-bio">—</span>
+                </div>
+              </div>
+
+              <!-- 3 Plakietki okręgów: OBRONA, WYTRZYMAŁOŚĆ, TEMPO -->
+              <div class="sheet-derived-badges">
+                <div class="derived-circle">
+                  <div class="circle-ring">
+                    <span class="circle-value" id="sheet-parry">2</span>
+                    <span class="circle-sub" id="sheet-parry-mod">+0 Tarcza</span>
+                  </div>
+                  <span class="circle-label">OBRONA</span>
+                </div>
+
+                <div class="derived-circle">
+                  <div class="circle-ring">
+                    <span class="circle-value" id="sheet-toughness">4</span>
+                    <span class="circle-sub" id="sheet-armor-val">(+0 Panc.)</span>
+                  </div>
+                  <span class="circle-label">WYTRZYMAŁOŚĆ</span>
+                </div>
+
+                <div class="derived-circle">
+                  <div class="circle-ring">
+                    <span class="circle-value" id="sheet-pace">6</span>
+                    <span class="circle-sub" id="sheet-running-die">Bieg: k6</span>
+                  </div>
+                  <span class="circle-label">TEMPO</span>
+                </div>
+              </div>
+
+              <!-- Notatka: SPRZĘT -->
+              <div class="sw-tape-note sheet-gear-box">
+                <h3 class="sheet-section-title">SPRZĘT</h3>
+                <ul class="sheet-gear-list" id="sheet-gear-rendered-list">
+                  <!-- Dynamicznie -->
+                </ul>
+                <div class="sheet-load-footer">
+                  <div>OBCIĄŻENIE: <span id="sheet-current-load">0 kg</span></div>
+                  <div>UDŹWIG: <span id="sheet-max-load">30 kg</span></div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Prawa kolumna: ZAWADY, PRZEWAGI I ROZWINIĘCIA, RANY & ZMĘCZENIE -->
+            <div class="sheet-right-col">
+              
+              <!-- TOR 1: ZDROWIE FIZYCZNE (RANY I ZMĘCZENIE) -->
+              <div class="sw-tape-note" style="padding: 10px;">
+                <div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; text-align: center; color: var(--sw-red-dark);">
+                  TOR ZDROWIA FIZYCZNEGO (RANY I ZMĘCZENIE)
+                </div>
+                <div class="sheet-wounds-tracker">
+                  <div class="wound-step">
+                    <span>-1</span>
+                    <div class="wound-box" data-wound="1"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span>-2</span>
+                    <div class="wound-box" data-wound="2"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span>-3</span>
+                    <div class="wound-box" data-wound="3"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span style="color: var(--sw-red);">K.O.</span>
+                    <div class="wound-box" data-wound="ko"></div>
+                  </div>
+                  <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 4px;"></div>
+                  <div class="wound-step">
+                    <span>Zm -1</span>
+                    <div class="wound-box" data-fatigue="1"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span>Zm -2</span>
+                    <div class="wound-box" data-fatigue="2"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- TOR 2: POCZYTALNOŚĆ (ZDROWIE PSYCHICZNE / SZALEŃSTWO) -->
+              <div class="sw-tape-note" style="padding: 10px;">
+                <div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; text-align: center; color: #4a2373;">
+                  POCZYTALNOŚĆ (ZDROWIE PSYCHICZNE)
+                </div>
+                <div class="sheet-wounds-tracker" style="background: #f7f2fc; border-color: #d1bfe8;">
+                  <div class="wound-step">
+                    <span>-1</span>
+                    <div class="wound-box sanity-box" data-sanity="1"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span>-2</span>
+                    <div class="wound-box sanity-box" data-sanity="2"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span>-3</span>
+                    <div class="wound-box sanity-box" data-sanity="3"></div>
+                  </div>
+                  <div class="wound-step">
+                    <span style="color: #6a1b9a;">Obłęd</span>
+                    <div class="wound-box sanity-box" data-sanity="ko"></div>
+                  </div>
+                </div>
+                <div style="margin-top: 8px;">
+                  <label for="char-sanity-notes" style="font-size: 0.75rem; font-weight: bold; color: #555; display: block; margin-bottom: 2px;">
+                    Fobie / Urazy psychiczne:
+                  </label>
+                  <input type="text" id="char-sanity-notes" class="form-control" placeholder="np. Lęk wysokości, Paranoja, Widzi cienie..." style="font-size: 0.8rem; padding: 4px 8px; width: 100%;">
+                </div>
+              </div>
+
+              <!-- ZAWADY -->
+              <div class="sw-tape-note">
+                <h3 class="sheet-section-title">ZAWADY</h3>
+                <div id="sheet-hindrances-rendered-list" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; gap: 6px;">
+                  <!-- Dynamicznie -->
+                </div>
+              </div>
+
+              <!-- PRZEWAGI I ROZWINIĘCIA -->
+              <div class="sw-tape-note" style="flex: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed var(--sw-border-light); padding-bottom: 6px; margin-bottom: 8px;">
+                  <h3 style="font-family: var(--font-heading); font-size: 1.05rem; margin: 0;">PRZEWAGI I ROZWINIĘCIA</h3>
+                  <button class="sw-btn btn-sm btn-primary" id="btn-open-advancement-modal" style="font-size: 0.75rem; padding: 3px 8px;">
+                    ⚡ Dodaj Awans
+                  </button>
+                </div>
+
+                <div style="font-size: 0.75rem; font-weight: bold; color: var(--sw-red); margin-bottom: 4px; text-transform: uppercase;">Przewagi postaci:</div>
+                <div id="sheet-edges-rendered-list" style="font-size: 0.85rem; line-height: 1.4; display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;">
+                  <!-- Dynamicznie -->
+                </div>
+
+                <!-- Lista historii awansów -->
+                <div class="advances-history-section" style="border-top: 1px dashed var(--sw-border); padding-top: 8px; margin-top: 8px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <div style="font-size: 0.75rem; font-weight: bold; color: var(--sw-red); text-transform: uppercase;">
+                      Historia Rozwinięć (<span id="sheet-advances-count-display">0</span>):
+                    </div>
+                    <button class="sw-btn" id="btn-undo-last-advance" style="font-size: 0.7rem; padding: 2px 6px; display: none;" title="Cofnij ostatni awans">
+                      ↩ Cofnij ostatni
+                    </button>
+                  </div>
+                  <div id="sheet-advances-rendered-list" style="font-size: 0.8rem; line-height: 1.4; display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px;">
+                    <!-- Dynamicznie -->
+                  </div>
+                </div>
+
+                <!-- Tabela postępu rang i awansów -->
+                <div class="advances-tracker-box">
+                  <div style="font-size: 0.75rem; font-weight: bold; margin-bottom: 4px; color: var(--sw-ink-light);">
+                    KAMIENIE MILOWE ROZWOJU (AWANSE):
+                  </div>
+                  <div class="advances-grid" id="advances-dots-container">
+                    <!-- Dots: N1, N2, N3, D1, D2, D3, D4, W1, W2, W3, W4, H1, H2, H3, H4, L1, L2, L3, L4 -->
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Dolna sekcja: MOCE ORAZ BROŃ -->
+          <div class="sheet-bottom-section">
+            
+            <!-- Tabela MOCY (widoczna jeśli postać posiada moce) -->
+            <div class="sw-tape-note" id="sheet-powers-container">
+              <h3 class="sheet-section-title">MOCE I ARTEFAKTY</h3>
+              <table class="sheet-table">
+                <thead>
+                  <tr>
+                    <th style="width: 220px;">MOC</th>
+                    <th style="width: 80px;">PM</th>
+                    <th style="width: 120px;">ZASIĘG</th>
+                    <th style="width: 120px;">TRWANIE</th>
+                    <th>EFEKT / DZIAŁANIE</th>
+                  </tr>
+                </thead>
+                <tbody id="sheet-powers-tbody">
+                  <!-- Dynamicznie -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Tabela BRONI -->
+            <div class="sw-tape-note">
+              <h3 class="sheet-section-title">BROŃ I ATAKI</h3>
+              <table class="sheet-table">
+                <thead>
+                  <tr>
+                    <th style="width: 200px;">BROŃ</th>
+                    <th style="width: 110px;">ZASIĘG</th>
+                    <th style="width: 120px;">OBRAŻENIA</th>
+                    <th style="width: 60px;">PP</th>
+                    <th style="width: 60px;">SzS</th>
+                    <th style="width: 60px;">WAGA</th>
+                    <th>UWAGI I WŁAŚCIWOŚCI</th>
+                  </tr>
+                </thead>
+                <tbody id="sheet-weapons-tbody">
+                  <!-- Dynamicznie -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Tor amunicji (1-30) -->
+            <div class="sw-tape-note" style="padding: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-family: var(--font-heading); font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">
+                  LICZNIK AMUNICJI (KLIKNIJ BY OZNACZYĆ):
+                </span>
+                <button class="sw-btn" id="btn-reset-ammo" style="font-size: 0.7rem; padding: 2px 6px;">Resetuj</button>
+              </div>
+              <div class="sheet-ammo-track" id="sheet-ammo-track">
+                <!-- 1 do 30 -->
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- STRONA 2: NOTATKI, HISTORIA I WIĘZI (w kratkę ze spinaczami) -->
+        <div class="sw-sheet-page sheet-page-notes" id="sheet-page-2">
+          <div class="notes-paperclip"></div>
+          <h3 style="font-family: var(--font-heading); text-align: center; font-size: 1.4rem; letter-spacing: 2px; margin-bottom: 15px; color: #333;">
+            NOTATKI, HISTORIA I PRZYGODY
+          </h3>
+          <div id="notes-print-display" class="notes-print-area"></div>
+          <textarea id="char-notes-area" class="notes-content-area" placeholder="Miejsce na historię bohatera, opis wyglądu, sojuszników, cele kampanii i notatki z sesji..."></textarea>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ====================================================================
+         WIDOK 3: ARCHETYPY (PRZYKŁADOWE POSTACIE)
+         ==================================================================== -->
+    <section id="view-archetypes" class="sw-view">
+      <div style="margin-bottom: 20px; text-align: center; color: #f1ede4;">
+        <h2 style="font-family: var(--font-heading); font-size: 1.8rem; margin-bottom: 6px;">
+          Gotowe Archetypy Postaci (Nowicjusze)
+        </h2>
+        <p style="color: #c5bba8;">
+          Wybierz jedną z gotowych, przetestowanych postaci z polskiego podręcznika zasad. Możesz natychmiast załadować ją do edycji lub wydruku!
+        </p>
+      </div>
+
+      <div class="archetypes-grid" id="archetypes-list-container">
+        <!-- Generowane dynamicznie -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================================
+       MODAL: MENEDŻER POSTACI
+       ====================================================================== -->
+  <div class="sw-modal-overlay" id="modal-char-manager">
+    <div class="sw-modal-box">
+      <div class="sw-modal-header">
+        <h3>Twoje Zapisane Postacie</h3>
+        <button class="sw-modal-close" data-close="modal-char-manager">&times;</button>
+      </div>
+      <div class="sw-modal-body">
+        <div class="saved-characters-list" id="saved-chars-container">
+          <!-- Dynamicznie -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: DODAWANIE AWANSU (ADVANCEMENT)
+       ====================================================================== -->
+  <div class="sw-modal-overlay" id="modal-advancement">
+    <div class="sw-modal-box" style="max-width: 720px; width: 95%;">
+      <div class="sw-modal-header">
+        <h3 id="modal-adv-title">Rozwój postaci — Nowy Awans</h3>
+        <button class="sw-modal-close" data-close="modal-advancement">&times;</button>
+      </div>
+      <div class="sw-modal-body">
+        <div id="modal-adv-meta" style="background: var(--sw-parchment-dark); padding: 8px 14px; border-radius: 6px; margin-bottom: 12px; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--sw-border);">
+          <div><strong>Kolejny Awans:</strong> <span id="adv-current-num" style="color: var(--sw-red); font-weight: bold;">#1</span></div>
+          <div><strong>Ranga postaci:</strong> <span id="adv-current-rank" style="color: var(--sw-red); font-weight: bold;">Nowicjusz (N)</span></div>
+        </div>
+
+        <p style="margin-bottom: 10px; font-size: 0.85rem; color: #444;">
+          Zgodnie z zasadami SWADE (str. 55), za każdy zdobyty <strong>Awans</strong> wybierz jedną z 4 oficjalnych opcji rozwoju:
+        </p>
+
+        <!-- Wybór kategorii awansu -->
+        <div class="adv-choice-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px; margin-bottom: 14px;">
+          
+          <!-- Opcja 1: Nowa Przewaga -->
+          <label class="adv-choice-card active" id="lbl-adv-edge" style="border: 2px solid var(--sw-gold); border-radius: 6px; padding: 10px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start; background: #fffdf9;">
+            <input type="radio" name="adv-choice" value="edge" checked style="margin-top: 3px;">
+            <div>
+              <strong style="color: var(--sw-red);">1. Nowa Przewaga</strong>
+              <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">Wybierz nową Przewagę dostępną dla aktualnej Rangi postaci.</div>
+            </div>
+          </label>
+
+          <!-- Opcja 2: Podniesienie Atrybutu -->
+          <label class="adv-choice-card" id="lbl-adv-attr" style="border: 2px solid var(--sw-border); border-radius: 6px; padding: 10px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start;">
+            <input type="radio" name="adv-choice" value="attr" style="margin-top: 3px;">
+            <div>
+              <strong style="color: var(--sw-red);">2. Podniesienie Atrybutu</strong>
+              <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">+1 rodzaj kości (maks. 1 raz na Rangę, Legendy co 2 awanse).</div>
+            </div>
+          </label>
+
+          <!-- Opcja 3: Rozwój Umiejętności -->
+          <label class="adv-choice-card" id="lbl-adv-skills" style="border: 2px solid var(--sw-border); border-radius: 6px; padding: 10px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start;">
+            <input type="radio" name="adv-choice" value="skills" style="margin-top: 3px;">
+            <div>
+              <strong style="color: var(--sw-red);">3. Rozwój Umiejętności</strong>
+              <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">2 umiejętności poniżej cech LUB 1 umiejętność na poziomie/powyżej cechy.</div>
+            </div>
+          </label>
+
+          <!-- Opcja 4: Zawada -->
+          <label class="adv-choice-card" id="lbl-adv-hindrance" style="border: 2px solid var(--sw-border); border-radius: 6px; padding: 10px; cursor: pointer; display: flex; gap: 10px; align-items: flex-start;">
+            <input type="radio" name="adv-choice" value="hindrance" style="margin-top: 3px;">
+            <div>
+              <strong style="color: var(--sw-red);">4. Usunięcie Zawady</strong>
+              <div style="font-size: 0.75rem; color: #666; margin-top: 2px;">Usuń Drobną Zawadę lub zmniejsz Poważną do Drobnej.</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- Dynamiczne panele konfiguracyjne dla wybranej opcji -->
+        <div id="adv-config-container" style="background: #fff; border: 1px solid var(--sw-border); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+          
+          <!-- Panel 1: Wybór Przewagi -->
+          <div id="adv-panel-edge" class="adv-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h4 style="font-family: var(--font-heading); margin: 0;">Wybierz nową Przewagę:</h4>
+              <span id="adv-edge-count-badge" style="font-size: 0.75rem; color: #666;">Dostępne: 0</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+              <input type="text" id="adv-edge-search" class="form-control" placeholder="Szukaj przewagi (np. Garda, Dobywanie...)" style="flex: 1; font-size: 0.85rem;">
+              <select id="adv-edge-rank-filter" class="form-control" style="width: 170px; font-size: 0.85rem;">
+                <option value="eligible" selected>Tylko moja Ranga i niższe</option>
+                <option value="all">Wszystkie rangi</option>
+              </select>
+            </div>
+            <select id="adv-edge-select" class="form-control" size="6" style="width: 100%; margin-bottom: 8px; font-family: monospace; font-size: 0.85rem;">
+              <!-- Dynamicznie listowane przewagi -->
+            </select>
+            <div id="adv-edge-details" style="font-size: 0.8rem; background: var(--sw-parchment-light); padding: 8px; border-radius: 4px; border: 1px solid var(--sw-border-light); min-height: 45px; line-height: 1.4;">
+              Wybierz przewagę z listy, aby zobaczyć opis i wymagania.
+            </div>
+          </div>
+
+          <!-- Panel 2: Wybór Atrybutu -->
+          <div id="adv-panel-attr" class="adv-panel" style="display: none;">
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Wybierz atrybut do podniesienia (+1 rodzaj kości):</h4>
+            <div id="adv-attr-warning" style="display: none; background: #fff3cd; color: #856404; padding: 8px 12px; border-radius: 4px; border: 1px solid #ffeeba; font-size: 0.8rem; margin-bottom: 10px;">
+              ⚠️ W aktualnej Randze podniesiono już atrybut. Zgodnie z zasadami SWADE atrybut można podnieść maksymalnie raz na Rangę (N, D, W, H).
+            </div>
+            <div id="adv-attr-radios" style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Dynamicznie: Zręczność, Spryt, Duch, Siła, Wigor z aktualnym poziomem i nowym poziomem -->
+            </div>
+          </div>
+
+          <!-- Panel 3: Wybór Umiejętności -->
+          <div id="adv-panel-skills" class="adv-panel" style="display: none;">
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Wybierz sposób rozwoju umiejętności:</h4>
+            <div style="display: flex; gap: 15px; margin-bottom: 12px; flex-wrap: wrap;">
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                <input type="radio" name="adv-skill-mode" value="two_below" checked>
+                <strong>Dwie umiejętności niższe od cech</strong> (lub nowa od k4)
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+                <input type="radio" name="adv-skill-mode" value="one_equal">
+                <strong>Jedna umiejętność na poziomie lub wyższa od cechy</strong>
+              </label>
+            </div>
+
+            <div id="adv-skills-two-container">
+              <div style="margin-bottom: 10px;">
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 4px;">Pierwsza umiejętność:</label>
+                <select id="adv-skill-select-1" class="form-control" style="font-size: 0.85rem;"></select>
+              </div>
+              <div>
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 4px;">Druga umiejętność:</label>
+                <select id="adv-skill-select-2" class="form-control" style="font-size: 0.85rem;"></select>
+              </div>
+            </div>
+
+            <div id="adv-skills-one-container" style="display: none;">
+              <div>
+                <label style="font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 4px;">Umiejętność do podniesienia (+1 rodzaj kości):</label>
+                <select id="adv-skill-select-single" class="form-control" style="font-size: 0.85rem;"></select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 4: Wybór Zawady -->
+          <div id="adv-panel-hindrance" class="adv-panel" style="display: none;">
+            <h4 style="font-family: var(--font-heading); margin-bottom: 8px;">Usunięcie lub zmniejszenie Zawady:</h4>
+            <div id="adv-hindrance-content">
+              <!-- Dynamicznie: select z zawad postaci -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Notatka / Podsumowanie -->
+        <div class="form-group" style="margin-top: 10px;">
+          <label for="adv-description" style="font-size: 0.85rem; font-weight: bold;">Podsumowanie wybranego awansu (notatka w karcie):</label>
+          <input type="text" id="adv-description" class="form-control" placeholder="Wybierz opcję powyżej, a opis wygeneruje się automatycznie">
+        </div>
+
+        <div style="margin-top: 16px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="sw-btn" data-close="modal-advancement">Anuluj</button>
+          <button class="sw-btn btn-primary" id="btn-confirm-advance" style="font-weight: bold;">⚡ Zastosuj Awans</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skrypty bazy danych i aplikacji -->
+  <script src="data.js"></script>
+  <script src="data_horror.js"></script>
+  <script src="data_fantasy.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1915 @@
+/* ==========================================================================
+   SAVAGE WORLDS: EDYCJA PRZYGODOWA (SWEP / SWADE) - STYLE
+   Wzorowane na oficjalnej karcie postaci oraz podręczniku
+   ========================================================================== */
+
+:root {
+  --sw-red: #9e1b1b;
+  --sw-red-dark: #701111;
+  --sw-red-light: #c82323;
+  --sw-gold: #c69214;
+  --sw-gold-light: #f5d061;
+  --sw-ink: #1f1d1a;
+  --sw-ink-light: #423e38;
+  --sw-parchment: #f9f6ed;
+  --sw-parchment-dark: #ede6d1;
+  --sw-parchment-deep: #dfd5b8;
+  --sw-border: #8c7653;
+  --sw-border-light: #c5b699;
+  --sw-bg: #2b2621;
+  --sw-card-bg: #ffffff;
+  --sw-tape: rgba(220, 215, 185, 0.7);
+  --sw-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  --font-heading: 'Trebuchet MS', 'Arial Black', Impact, sans-serif;
+  --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  --font-mono: 'Consolas', 'Courier New', monospace;
+}
+
+/* Motyw do druku / oszczędny */
+body.theme-print-bw {
+  --sw-red: #222222;
+  --sw-red-dark: #000000;
+  --sw-red-light: #444444;
+  --sw-gold: #555555;
+  --sw-gold-light: #cccccc;
+  --sw-ink: #111111;
+  --sw-ink-light: #333333;
+  --sw-parchment: #ffffff;
+  --sw-parchment-dark: #f0f0f0;
+  --sw-parchment-deep: #e0e0e0;
+  --sw-border: #333333;
+  --sw-border-light: #888888;
+  --sw-bg: #e6e6e6;
+  --sw-card-bg: #ffffff;
+  --sw-tape: rgba(200, 200, 200, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--sw-bg);
+  background-image: radial-gradient(circle at 50% 20%, #3e3730 0%, #201c18 100%);
+  color: var(--sw-ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   NAGŁÓWEK I PASEK NAWIGACJI
+   ========================================================================== */
+.sw-header {
+  background: linear-gradient(180deg, #181512 0%, #2a231d 100%);
+  border-bottom: 3px solid var(--sw-gold);
+  color: #f1ede4;
+  padding: 10px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.sw-header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.sw-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sw-logo-badge {
+  background: var(--sw-red);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 4px;
+  letter-spacing: 1.5px;
+  font-size: 1.1rem;
+  border: 1px solid var(--sw-gold);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+.sw-brand-text h1 {
+  font-size: 1.25rem;
+  font-family: var(--font-heading);
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.sw-brand-text span {
+  font-size: 0.8rem;
+  color: var(--sw-gold-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.sw-nav-tabs {
+  display: flex;
+  gap: 5px;
+  background: rgba(0,0,0,0.3);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.sw-tab-btn {
+  background: transparent;
+  color: #d1c8b8;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.95rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sw-tab-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #ffffff;
+}
+
+.sw-tab-btn.active {
+  background: var(--sw-red);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid var(--sw-gold);
+}
+
+.sw-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sw-btn {
+  background: #3c342b;
+  color: #f1ede4;
+  border: 1px solid var(--sw-border);
+  padding: 7px 13px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.sw-btn:hover {
+  background: #50463b;
+  border-color: var(--sw-gold);
+  color: #ffffff;
+}
+
+.sw-btn.btn-primary {
+  background: var(--sw-red);
+  border-color: var(--sw-gold);
+  color: #ffffff;
+}
+
+.sw-btn.btn-primary:hover {
+  background: var(--sw-red-light);
+}
+
+.sw-btn.btn-success {
+  background: #236329;
+  border-color: #389e41;
+  color: #ffffff;
+}
+
+.sw-btn.btn-success:hover {
+  background: #2b7a33;
+}
+
+/* ==========================================================================
+   GŁÓWNY KONTENER
+   ========================================================================== */
+.sw-main-content {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+
+.sw-view {
+  display: none;
+}
+
+.sw-view.active {
+  display: block;
+}
+
+/* ==========================================================================
+   WIDOK 1: KREATOR POSTACI (WIZARD)
+   ========================================================================== */
+.wizard-tracker {
+  background: var(--sw-parchment-dark);
+  border: 2px solid var(--sw-border);
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.tracker-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tracker-badge {
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.tracker-badge .label {
+  font-weight: 600;
+  color: var(--sw-ink-light);
+}
+
+.tracker-badge .value {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--sw-red);
+}
+
+.tracker-badge.valid .value {
+  color: #236329;
+}
+
+.tracker-badge.warning .value {
+  color: #c43202;
+}
+
+.wizard-steps-nav {
+  display: flex;
+  background: rgba(0,0,0,0.25);
+  border-radius: 6px;
+  padding: 4px;
+  gap: 4px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.step-nav-btn {
+  background: transparent;
+  color: #c5bba8;
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.step-nav-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.step-nav-btn.active {
+  background: var(--sw-parchment);
+  color: var(--sw-ink);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.step-nav-btn.completed {
+  color: #8be094;
+}
+
+.wizard-step-pane {
+  display: none;
+  background: var(--sw-parchment);
+  border: 2px solid var(--sw-border);
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: var(--sw-shadow);
+  animation: fadeIn 0.25s ease;
+}
+
+.wizard-step-pane.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-header {
+  border-bottom: 2px solid var(--sw-border-light);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.step-header h2 {
+  font-family: var(--font-heading);
+  color: var(--sw-red);
+  font-size: 1.4rem;
+}
+
+.step-header p {
+  color: var(--sw-ink-light);
+  font-size: 0.9rem;
+}
+
+.wizard-footer {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid var(--sw-border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Formularze i Siatki kreatora */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--sw-ink);
+}
+
+.form-control {
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  color: var(--sw-ink);
+  outline: none;
+  font-family: inherit;
+}
+
+.form-control:focus {
+  border-color: var(--sw-red);
+  box-shadow: 0 0 0 2px rgba(158, 27, 27, 0.2);
+}
+
+/* Wybór rasy */
+.races-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.race-card {
+  background: #ffffff;
+  border: 2px solid var(--sw-border-light);
+  border-radius: 6px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.race-card:hover {
+  border-color: var(--sw-red);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.race-card.selected {
+  border-color: var(--sw-red);
+  background: #fff8f8;
+  box-shadow: 0 0 0 2px var(--sw-red);
+}
+
+.race-card h3 {
+  font-family: var(--font-heading);
+  color: var(--sw-red);
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.race-card p {
+  font-size: 0.85rem;
+  color: var(--sw-ink-light);
+  margin-bottom: 10px;
+}
+
+.race-traits-list {
+  list-style: none;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.race-traits-list li {
+  background: var(--sw-parchment-dark);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid var(--sw-gold);
+}
+
+/* Wybór Atrybutów */
+.attributes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 800px;
+}
+
+.attr-row {
+  background: #ffffff;
+  border: 1px solid var(--sw-border-light);
+  border-radius: 6px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.attr-info {
+  flex: 1;
+  min-width: 180px;
+}
+
+.attr-info h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  color: var(--sw-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attr-info p {
+  font-size: 0.8rem;
+  color: var(--sw-ink-light);
+}
+
+.dice-selector {
+  display: flex;
+  gap: 6px;
+  background: var(--sw-parchment-dark);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--sw-border-light);
+}
+
+.dice-btn {
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: var(--font-heading);
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--sw-ink);
+  min-width: 44px;
+  text-align: center;
+}
+
+.dice-btn:hover:not(:disabled) {
+  background: #faeae6;
+  border-color: var(--sw-red);
+}
+
+.dice-btn.selected {
+  background: var(--sw-red);
+  color: #ffffff;
+  border-color: var(--sw-red-dark);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.dice-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Umiejętności */
+.skills-table-container {
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.skills-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.skills-table th {
+  background: var(--sw-parchment-deep);
+  color: var(--sw-ink);
+  font-family: var(--font-heading);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--sw-border);
+}
+
+.skills-table td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--sw-parchment-dark);
+  vertical-align: middle;
+}
+
+.skills-table tr:hover {
+  background: #fffdf8;
+}
+
+.skill-tag-core {
+  background: #e1efe2;
+  color: #1a6e25;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.skill-tag-arcane {
+  background: #f0e6fa;
+  color: #6a1b9a;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.skill-filter-btn {
+  background: #ffffff;
+  color: var(--sw-ink);
+  border: 1px solid var(--sw-border-light);
+  font-size: 0.82rem;
+  padding: 5px 11px;
+  border-radius: 4px;
+}
+
+.skill-filter-btn:hover {
+  background: #faeae6;
+  border-color: var(--sw-red);
+  color: var(--sw-red);
+}
+
+.skill-filter-btn.active {
+  background: var(--sw-red);
+  color: #ffffff;
+  border-color: var(--sw-red-dark);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.dice-btn[data-die="none"] {
+  font-size: 0.78rem;
+  padding: 6px 8px;
+  color: #777;
+  background: #fdfdfd;
+}
+
+.dice-btn[data-die="none"].selected {
+  background: #6c757d;
+  color: #ffffff;
+  border-color: #495057;
+}
+
+/* Wymiana punktów z Zawad */
+.hindrance-exchange-box {
+  background: #fff9e6;
+  border: 1px solid var(--sw-gold);
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.exchange-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.exchange-card {
+  background: #ffffff;
+  border: 1px solid var(--sw-border-light);
+  border-radius: 4px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ==========================================================================
+   WIDOK 2: OFICJALNY ARKUSZ POSTACI (SWEP CHARACTER SHEET)
+   Dokładne odwzorowanie układu z SWEP_karta3.pdf
+   ========================================================================== */
+.sw-sheet-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+}
+
+.sw-sheet-page {
+  width: 100%;
+  max-width: 960px;
+  background: var(--sw-parchment);
+  background-image: 
+    radial-gradient(#dfd5b8 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.4), rgba(240, 230, 205, 0.4));
+  background-size: 20px 20px, 100% 100%;
+  border: 3px solid var(--sw-border);
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  position: relative;
+}
+
+/* Kartki z taśmą (Torn paper notes) */
+.sw-tape-note {
+  background: #ffffff;
+  border: 1px solid #c7bba2;
+  border-radius: 2px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.1);
+  position: relative;
+  padding: 15px;
+}
+
+.sw-tape-note::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: 30%;
+  width: 80px;
+  height: 20px;
+  background: var(--sw-tape);
+  transform: rotate(-2deg);
+  border-left: 2px dashed rgba(0,0,0,0.1);
+  border-right: 2px dashed rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Nagłówek oficjalnej karty postaci */
+.sheet-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--sw-ink);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.sheet-logo-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-logo-main {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  line-height: 1;
+  color: var(--sw-red);
+}
+
+.sheet-logo-sub {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  color: var(--sw-ink-light);
+  font-weight: 700;
+}
+
+.sheet-header-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  font-weight: 800;
+  color: var(--sw-ink);
+}
+
+.notes-print-area {
+  display: none;
+}
+
+.sheet-blank-row {
+  opacity: 0.55;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sheet-blank-dots {
+  color: #bbb;
+  letter-spacing: 1.5px;
+  font-size: 0.8rem;
+  overflow: hidden;
+}
+
+/* Górna siatka karty */
+.sheet-top-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+@media (max-width: 900px) {
+  .sheet-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Atrybuty na karcie */
+.sheet-attr-box h3,
+.sheet-skills-box h3,
+.sheet-section-title {
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--sw-ink);
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  border-bottom: 2px dashed var(--sw-border-light);
+  padding-bottom: 6px;
+}
+
+.sheet-attr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet-attr-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+}
+
+.sheet-attr-name {
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.sheet-dice-track {
+  display: flex;
+  align-items: center;
+  background: #f7f4ed;
+  border: 1px solid var(--sw-border-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sheet-die-step {
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-right: 1px solid var(--sw-border-light);
+  color: #7a7060;
+  text-align: center;
+}
+
+.sheet-die-step:last-child {
+  border-right: none;
+}
+
+.sheet-die-step.active {
+  background: var(--sw-ink);
+  color: #ffffff;
+}
+
+/* Środek nagłówka: Dane i Okręgi pochodnych */
+.sheet-center-col {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sheet-bio-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  font-size: 0.88rem;
+}
+
+.sheet-bio-field {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  border-bottom: 1px dotted var(--sw-border);
+  padding-bottom: 3px;
+}
+
+.sheet-bio-label {
+  font-family: var(--font-heading);
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  color: var(--sw-ink-light);
+  white-space: nowrap;
+}
+
+.sheet-bio-val {
+  font-weight: 600;
+  color: var(--sw-ink);
+  flex: 1;
+}
+
+/* 3 Okrągłe Plakietki: Obrona, Wytrzymałość, Tempo */
+.sheet-derived-badges {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin: 15px 0;
+}
+
+.derived-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.circle-ring {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 3px double var(--sw-ink);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.circle-value {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  font-weight: bold;
+  line-height: 1;
+  color: var(--sw-red);
+}
+
+.circle-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--sw-ink-light);
+}
+
+.circle-label {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  color: var(--sw-ink);
+}
+
+/* Sekcja Sprzęt w centrum */
+.sheet-gear-box {
+  flex: 1;
+  min-height: 220px;
+}
+
+.sheet-gear-list {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  list-style: square inside;
+  margin-bottom: 10px;
+}
+
+.sheet-load-footer {
+  border-top: 1px solid var(--sw-border-light);
+  padding-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* Prawa kolumna: Zawady, Przewagi, Rany, Zmęczenie */
+.sheet-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sheet-wounds-tracker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fdf5f5;
+  border: 1px solid #e2bcbc;
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.wound-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.wound-box {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--sw-red);
+  background: #ffffff;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.wound-box.checked {
+  background: var(--sw-red);
+  position: relative;
+}
+
+.wound-box.checked::after {
+  content: "✕";
+  color: #fff;
+  display: block;
+  text-align: center;
+  line-height: 18px;
+  font-size: 14px;
+}
+
+.wound-box.sanity-box {
+  border-color: #6a1b9a;
+}
+
+.wound-box.sanity-box.checked {
+  background: #6a1b9a;
+}
+
+/* Rozwój postaci / Tabela awansów */
+.advances-tracker-box {
+  margin-top: 10px;
+  border-top: 1px dashed var(--sw-border);
+  padding-top: 8px;
+}
+
+.advances-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.advance-dot {
+  font-size: 0.75rem;
+  font-family: var(--font-heading);
+  background: #f2eee4;
+  border: 1px solid var(--sw-border);
+  padding: 2px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.advance-dot.active {
+  background: var(--sw-gold);
+  color: #fff;
+  font-weight: bold;
+}
+
+.advance-dot:hover {
+  transform: scale(1.05);
+  border-color: var(--sw-red);
+}
+
+/* Historia awansów na karcie postaci */
+.advance-log-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: var(--sw-parchment-light);
+  border-left: 3px solid var(--sw-gold);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  margin-bottom: 3px;
+}
+
+.advance-log-item:hover {
+  background: #fdf6e6;
+}
+
+.advance-log-tag {
+  font-weight: bold;
+  font-size: 0.75rem;
+  color: var(--sw-red);
+  margin-right: 6px;
+}
+
+/* Karty wyboru w modalu awansu */
+.adv-choice-card {
+  transition: all 0.2s ease;
+}
+
+.adv-choice-card:hover {
+  border-color: var(--sw-gold) !important;
+  background: #fffdfa !important;
+}
+
+.adv-choice-card.active,
+.adv-choice-card:has(input:checked) {
+  border-color: var(--sw-red) !important;
+  background: #fcf4f4 !important;
+  box-shadow: 0 2px 6px rgba(186, 24, 27, 0.12);
+}
+
+/* Dolna sekcja: Bronie i Moce */
+.sheet-bottom-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+}
+
+.sheet-table th {
+  background: #ece4cf;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--sw-border);
+  text-align: left;
+}
+
+.sheet-table td {
+  padding: 6px 8px;
+  border-bottom: 1px dotted var(--sw-border-light);
+}
+
+/* Pasek amunicji (1-30) */
+.sheet-ammo-track {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  overflow-x: auto;
+}
+
+.ammo-node {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--sw-ink-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  background: #fff;
+}
+
+.ammo-node.special {
+  border-width: 2px;
+  border-color: var(--sw-red);
+}
+
+.ammo-node.used {
+  background: var(--sw-ink);
+  color: #fff;
+}
+
+/* Druga strona karty (Notatki w kratkę) */
+.sheet-page-notes {
+  min-height: 800px;
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(#e5e5e5 1px, transparent 1px),
+    linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: relative;
+}
+
+.notes-paperclip {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  width: 30px;
+  height: 60px;
+  border: 3px solid #777;
+  border-radius: 15px;
+  transform: rotate(-15deg);
+  opacity: 0.8;
+}
+
+.notes-content-area {
+  width: 100%;
+  min-height: 700px;
+  border: none;
+  background: transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  line-height: 20px;
+  padding: 10px;
+  resize: vertical;
+  color: #111;
+  outline: none;
+}
+
+/* ==========================================================================
+   WIDOK 3: ARCHETYPY (PRZYKŁADOWE POSTACIE)
+   ========================================================================== */
+.archetypes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.archetype-card {
+  background: var(--sw-parchment);
+  border: 2px solid var(--sw-border);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: var(--sw-shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.archetype-card h3 {
+  font-family: var(--font-heading);
+  color: var(--sw-red);
+  font-size: 1.25rem;
+}
+
+.archetype-concept {
+  font-weight: 600;
+  color: var(--sw-ink-light);
+  margin-bottom: 12px;
+}
+
+.archetype-stats-summary {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--sw-border-light);
+  margin-bottom: 15px;
+}
+
+/* ==========================================================================
+   MODAL I SZUFLADA MENEDŻERA POSTACI
+   ========================================================================== */
+.sw-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+}
+
+.sw-modal-overlay.active {
+  display: flex;
+}
+
+.sw-modal-box {
+  background: var(--sw-parchment);
+  border: 3px solid var(--sw-border);
+  border-radius: 8px;
+  max-width: 650px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  animation: modalScale 0.2s ease;
+}
+
+@keyframes modalScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sw-modal-header {
+  background: var(--sw-parchment-deep);
+  padding: 14px 20px;
+  border-bottom: 2px solid var(--sw-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sw-modal-header h3 {
+  font-family: var(--font-heading);
+  color: var(--sw-red);
+  font-size: 1.2rem;
+}
+
+.sw-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--sw-ink);
+}
+
+.sw-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.saved-characters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saved-char-item {
+  background: #ffffff;
+  border: 1px solid var(--sw-border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.saved-char-item:hover {
+  border-color: var(--sw-red);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.saved-char-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ==========================================================================
+   STYLE DO DRUKU (@media print) - PROFESJONALNA KARTA A4 (SWEP)
+   ========================================================================== */
+@page {
+  size: A4 portrait;
+  margin: 6mm 8mm;
+}
+
+@media print {
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    font-size: 9pt !important;
+  }
+
+  /* Ukryj elementy interfejsu ekranowego */
+  .sw-header,
+  .sw-nav-tabs,
+  .sw-header-actions,
+  .wizard-tracker,
+  .wizard-steps-nav,
+  .wizard-footer,
+  .sw-modal,
+  .no-print,
+  #btn-open-advancement-modal,
+  #btn-reset-ammo,
+  .sw-tape-note::before,
+  .notes-paperclip {
+    display: none !important;
+  }
+
+  .sw-main-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .sw-view {
+    display: none !important;
+  }
+
+  .sw-view#view-sheet {
+    display: block !important;
+  }
+
+  .sw-sheet-wrapper {
+    gap: 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  /* STRONA 1 I STRONA 2 JAKO DOKŁADNIE POJEDYNCZE KARTY A4 */
+  .sw-sheet-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 0 0 !important;
+    padding: 6mm 7mm !important;
+    background: #ffffff !important;
+    background-image: none !important;
+    border: 1.5px solid #000000 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    position: relative !important;
+  }
+
+  .sw-sheet-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* ZACHOWAJ 3 KOLUMNY W DRUKU - BLOKADA PRZED ZWINIĘCIEM DO 1 KOLUMNY! */
+  .sheet-top-grid {
+    display: grid !important;
+    grid-template-columns: 220px 1fr 235px !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .sw-tape-note {
+    background: #ffffff !important;
+    border: 1px solid #333333 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 6px 8px !important;
+    margin: 0 !important;
+    break-inside: avoid !important;
+  }
+
+  /* NAGŁÓWKI SEKCJI */
+  .sheet-attr-box h3,
+  .sheet-skills-box h3,
+  .sheet-section-title {
+    font-size: 0.88rem !important;
+    margin: 0 0 4px 0 !important;
+    padding-bottom: 2px !important;
+    color: #000000 !important;
+    border-bottom: 1.5px solid #000000 !important;
+    text-align: center !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+  }
+
+  /* ATRYBUTY */
+  .sheet-attr-list {
+    gap: 4px !important;
+  }
+
+  .sheet-attr-item {
+    font-size: 0.84rem !important;
+  }
+
+  .sheet-attr-name {
+    font-weight: bold !important;
+    letter-spacing: 0.5px !important;
+    color: #000000 !important;
+  }
+
+  .sheet-dice-track {
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    border-radius: 2px !important;
+  }
+
+  .sheet-die-step {
+    padding: 1px 4px !important;
+    font-size: 0.74rem !important;
+    color: #333333 !important;
+    border-right: 1px solid #777777 !important;
+  }
+
+  .sheet-die-step.active {
+    background: #000000 !important;
+    color: #ffffff !important;
+    font-weight: 900 !important;
+  }
+
+  /* UMIEJĘTNOŚCI */
+  .sheet-skills-box {
+    margin-top: 8px !important;
+  }
+
+  #sheet-skills-render-list {
+    gap: 3px !important;
+  }
+
+  #sheet-skills-render-list > div {
+    font-size: 0.78rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* METRYCZKA BIO */
+  .sheet-bio-fields {
+    gap: 3px 6px !important;
+    font-size: 0.78rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  .sheet-bio-field {
+    border-bottom: 1px solid #777777 !important;
+    padding-bottom: 1px !important;
+  }
+
+  .sheet-bio-label {
+    font-size: 0.72rem !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+  }
+
+  .sheet-bio-val {
+    color: #000000 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+  }
+
+  /* KOŁA POCHODNYCH (OBRONA, WYTRZYMAŁOŚĆ, TEMPO) */
+  .sheet-derived-badges {
+    margin: 6px 0 !important;
+  }
+
+  .circle-ring {
+    width: 58px !important;
+    height: 58px !important;
+    border: 2px solid #000000 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .circle-value {
+    font-size: 1.45rem !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+  }
+
+  .circle-sub {
+    font-size: 0.62rem !important;
+    color: #333333 !important;
+  }
+
+  .circle-label {
+    font-size: 0.7rem !important;
+    color: #000000 !important;
+    margin-top: 2px !important;
+    font-weight: 800 !important;
+  }
+
+  /* SPRZĘT */
+  .sheet-gear-box {
+    min-height: 85px !important;
+  }
+
+  .sheet-gear-list {
+    font-size: 0.74rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 4px !important;
+    padding-left: 14px !important;
+  }
+
+  .sheet-load-footer {
+    font-size: 0.72rem !important;
+    padding-top: 3px !important;
+    border-top: 1px solid #555555 !important;
+    font-weight: bold !important;
+  }
+
+  /* PRAWA KOLUMNA: TORY ZDROWIA */
+  .sheet-right-col {
+    gap: 6px !important;
+  }
+
+  .sheet-wounds-tracker {
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    padding: 3px 6px !important;
+    border-radius: 0 !important;
+  }
+
+  .wound-step {
+    font-size: 0.72rem !important;
+    font-weight: bold !important;
+    color: #000000 !important;
+  }
+
+  .wound-box {
+    width: 17px !important;
+    height: 17px !important;
+    border: 1.5px solid #000000 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .wound-box.checked {
+    background: #000000 !important;
+  }
+
+  .wound-box.checked::after {
+    content: "✕" !important;
+    color: #ffffff !important;
+    font-size: 12px !important;
+    line-height: 15px !important;
+  }
+
+  .wound-box.sanity-box {
+    border-color: #000000 !important;
+  }
+
+  .wound-box.sanity-box.checked {
+    background: #000000 !important;
+  }
+
+  /* Pola notatek poczytalności w druku */
+  #char-sanity-notes {
+    border: none !important;
+    border-bottom: 1px solid #555555 !important;
+    border-radius: 0 !important;
+    padding: 1px 2px !important;
+    font-size: 0.74rem !important;
+    background: transparent !important;
+  }
+
+  #char-sanity-notes::placeholder {
+    color: transparent !important;
+  }
+
+  /* ZAWADY & PRZEWAGI */
+  #sheet-hindrances-rendered-list,
+  #sheet-edges-rendered-list {
+    font-size: 0.76rem !important;
+    line-height: 1.25 !important;
+    gap: 3px !important;
+  }
+
+  .advances-tracker-box {
+    margin-top: 3px !important;
+    padding-top: 3px !important;
+  }
+
+  .advances-grid {
+    gap: 2px !important;
+  }
+
+  .advance-dot {
+    width: 18px !important;
+    height: 16px !important;
+    font-size: 0.6rem !important;
+    border: 1px solid #333333 !important;
+    border-radius: 0 !important;
+  }
+
+  .advance-dot.active {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  /* DOLNA SEKCJA: BROŃ, MOCE, AMUNICJA */
+  .sheet-bottom-section {
+    gap: 6px !important;
+    margin-top: 2px !important;
+  }
+
+  .sheet-table {
+    border: 1.5px solid #000000 !important;
+    font-size: 0.74rem !important;
+  }
+
+  .sheet-table th {
+    background: #eeeeee !important;
+    color: #000000 !important;
+    padding: 4px 6px !important;
+    border-bottom: 1.5px solid #000000 !important;
+    font-size: 0.7rem !important;
+    font-weight: 800 !important;
+  }
+
+  .sheet-table td {
+    padding: 3px 6px !important;
+    border-bottom: 1px solid #cccccc !important;
+  }
+
+  /* LICZNIK AMUNICJI */
+  .sheet-ammo-track {
+    padding: 3px 5px !important;
+    border: 1px solid #000000 !important;
+    background: #ffffff !important;
+    gap: 1px !important;
+  }
+
+  .ammo-node {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.64rem !important;
+    border: 1px solid #000000 !important;
+  }
+
+  .ammo-node.special {
+    border: 2px solid #000000 !important;
+    font-weight: 900 !important;
+  }
+
+  .ammo-node.used {
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+
+  /* STRONA 2: NOTATKI W KRATKĘ */
+  .sheet-page-notes {
+    background: #ffffff !important;
+    background-image: 
+      linear-gradient(#cccccc 1px, transparent 1px),
+      linear-gradient(90deg, #cccccc 1px, transparent 1px) !important;
+    background-size: 5mm 5mm !important; /* prawdziwa kratka zeszytowa 5x5mm */
+    border: 1.5px solid #000000 !important;
+    padding: 8mm 10mm !important;
+    min-height: 275mm !important;
+  }
+
+  .notes-content-area {
+    min-height: 250mm !important;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif !important;
+    font-size: 0.9rem !important;
+    line-height: 5mm !important; /* dopasowanie do kratki 5mm */
+    color: #000000 !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .notes-content-area::placeholder {
+    color: transparent !important;
+  }
+}
+
+/* ==========================================================================
+   PASEK MODUŁÓW I DODATKÓW (SWEP, HORROR, FANTASY)
+   ========================================================================== */
+.sw-modules-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #fdfbf7 100%);
+  border: 1px solid var(--sw-border-light);
+  border-left: 4px solid var(--sw-gold);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.modules-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  color: var(--sw-ink);
+}
+
+.modules-bar-icon {
+  font-size: 1.2rem;
+}
+
+.modules-bar-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.module-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #d2d6dc;
+  background: #f8fafc;
+  color: #4b5563;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.module-chip input[type="checkbox"] {
+  display: none;
+}
+
+.module-chip:hover {
+  border-color: #9ca3af;
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.module-chip.is-active {
+  border-color: #1a56db;
+  background: #eff6ff;
+  color: #1e40af;
+  box-shadow: 0 2px 5px rgba(26, 86, 219, 0.15);
+}
+
+.module-chip.is-locked {
+  cursor: default;
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.module-chip#lbl-toggle-horror.is-active {
+  border-color: #831843;
+  background: #fdf2f8;
+  color: #831843;
+  box-shadow: 0 2px 5px rgba(131, 24, 67, 0.15);
+}
+
+.module-chip#lbl-toggle-fantasy.is-active {
+  border-color: #065f46;
+  background: #ecfdf5;
+  color: #065f46;
+  box-shadow: 0 2px 5px rgba(6, 95, 70, 0.15);
+}
+
+.chip-icon {
+  font-size: 1.1rem;
+}
+
+.chip-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: #e5e7eb;
+  color: #4b5563;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.module-chip.is-active .chip-badge {
+  background: #bfdbfe;
+  color: #1e3a8a;
+}
+
+.module-chip#lbl-toggle-horror.is-active .chip-badge {
+  background: #fbcfe8;
+  color: #701a75;
+}
+
+.module-chip#lbl-toggle-fantasy.is-active .chip-badge {
+  background: #a7f3d0;
+  color: #064e3b;
+}
+
+/* ODZNAKI ŹRÓDŁA DLA KART I POZYCJI */
+.badge-source {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.badge-source.badge-swep {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-source.badge-horror {
+  background: #fce7f3;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+}
+
+.badge-source.badge-fantasy {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+/* FILTRY MODUŁÓW W KATALOGACH KROKÓW */
+.catalog-module-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.chip-filter-btn {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chip-filter-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.chip-filter-btn.active {
+  background: var(--sw-red);
+  border-color: var(--sw-red-dark);
+  color: #ffffff;
+}
+
+@media print {
+  .sw-modules-bar,
+  .catalog-module-filters {
+    display: none !important;
+  }
+}
+

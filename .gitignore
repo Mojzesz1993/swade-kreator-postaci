@@ -1,0 +1,13 @@
+# Podręczniki źródłowe PDF (chronione prawem autorskim i duże pliki binarne)
+*.pdf
+
+# Pliki tymczasowe i robocze z ekstrakcji
+extracted_*.txt
+scratch/
+
+# Systemowe pliki operacyjne
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
