@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Savage Worlds: Edycja Przygodowa — Kreator i Karta Postaci</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261026_7">
 </head>
 <body>
 
@@ -85,17 +85,17 @@
             <span class="chip-name">SWEP (Podręcznik Główny)</span>
             <span class="chip-badge">Główny</span>
           </label>
-          <label class="module-chip" id="lbl-toggle-horror" title="Horror Companion: Potworni Bohaterowie, nowe Zawady, Przewagi Grozy, Alchemia, ZN, rytuały, nowe moce i poczytalność">
-            <input type="checkbox" id="mod-toggle-horror">
+          <label class="module-chip is-active" id="lbl-toggle-horror" title="Horror Companion: Potworni Bohaterowie, nowe Zawady, Przewagi Grozy, Alchemia, ZN, rytuały, nowe moce">
+            <input type="checkbox" id="mod-toggle-horror" checked>
             <span class="chip-icon">🦇</span>
             <span class="chip-name">Horror Companion</span>
-            <span class="chip-badge" id="status-badge-horror">Wyłączony</span>
+            <span class="chip-badge" id="status-badge-horror">Aktywny</span>
           </label>
-          <label class="module-chip" id="lbl-toggle-fantasy" title="Fantasy Companion: 25+ fantastycznych ras, Bard, Druid, Kleryk, Magia bitewna, chowańce, rynsztunek i pancerze fantasy">
-            <input type="checkbox" id="mod-toggle-fantasy">
+          <label class="module-chip is-active" id="lbl-toggle-fantasy" title="Fantasy Companion: 25+ fantastycznych ras, Bard, Druid, Kleryk, Magia bitewna, chowańce, rynsztunek i pancerze fantasy">
+            <input type="checkbox" id="mod-toggle-fantasy" checked>
             <span class="chip-icon">🐉</span>
             <span class="chip-name">Fantasy Companion</span>
-            <span class="chip-badge" id="status-badge-fantasy">Wyłączony</span>
+            <span class="chip-badge" id="status-badge-fantasy">Aktywny</span>
           </label>
         </div>
       </div>
@@ -195,14 +195,34 @@
         <div class="step-header">
           <div>
             <h2>Krok 2: Zawady postaci</h2>
-            <p>Wybierz wady, które nadają postaci głębię. Drobna Zawada daje 1 punkt, Poważna 2 punkty (maksymalnie 4 punkty do zdobycia).</p>
+            <p>Wybierz wady, które nadają postaci głębię. <strong>Drobna Zawada</strong> daje 1 punkt, <strong>Poważna</strong> 2 punkty (maksymalnie <strong>4 punkty</strong> z Zawad).</p>
           </div>
+        </div>
+
+        <!-- Pasek podsumowania punktów Zawad -->
+        <div class="hindrance-points-banner" id="hindrance-points-banner">
+          <div class="hind-stat-pill">
+            <span class="hind-stat-label">Zdobyte punkty z Zawad:</span>
+            <strong id="hind-banner-earned">0 / 4 pkt</strong>
+          </div>
+          <div class="hind-stat-pill">
+            <span class="hind-stat-label">Wydane na korzyści:</span>
+            <strong id="hind-banner-spent">0 / 0 pkt</strong>
+          </div>
+          <div class="hind-stat-pill">
+            <span class="hind-stat-label">Pozostało do wydania:</span>
+            <strong id="hind-banner-remaining">0 pkt</strong>
+          </div>
+          <label class="hind-extra-toggle" title="Zgodnie z SWEP str. 21 możesz dobrać więcej Zawad dla odgrywania roli, ale nie dają one punktów powyżej limitu 4.">
+            <input type="checkbox" id="chk-allow-extra-hindrances">
+            <span>Pozwól na dodatkowe Zawady fabularne (0 pkt powyżej 4 pkt)</span>
+          </label>
         </div>
 
         <div class="form-grid-2">
           <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-              <h3 style="font-family: var(--font-heading); margin: 0;">Dostępne Zawady:</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <h3 style="font-family: var(--font-heading); margin: 0;">Dostępne Zawady (<span id="hindrances-count-label">0</span>):</h3>
               <div class="catalog-module-filters" id="hindrances-module-filters" style="margin: 0;">
                 <button type="button" class="chip-filter-btn active" data-hind-mod="all">Wszystkie</button>
                 <button type="button" class="chip-filter-btn" data-hind-mod="swep">📘 SWEP</button>
@@ -210,8 +230,16 @@
                 <button type="button" class="chip-filter-btn" data-hind-mod="fantasy">🐉 Fantasy</button>
               </div>
             </div>
-            <input type="text" id="filter-hindrances" class="form-control" placeholder="🔍 Szukaj zawady..." style="margin-bottom: 10px;">
-            <div id="hindrances-catalog-list" style="max-height: 380px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
+            <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+              <input type="text" id="filter-hindrances" class="form-control" placeholder="🔍 Szukaj zawady po nazwie lub opisie..." style="flex: 1; min-width: 180px;">
+              <select id="filter-hindrances-severity" class="form-control" style="width: auto; font-size: 0.85rem; padding: 6px 10px;">
+                <option value="all">Wszystkie stopnie</option>
+                <option value="drobna">Tylko Drobne (1 pkt)</option>
+                <option value="powazna">Tylko Poważne (2 pkt)</option>
+                <option value="dual">Zmienne: Drobna/Poważna</option>
+              </select>
+            </div>
+            <div id="hindrances-catalog-list" style="max-height: 430px; overflow-y: auto; border: 1px solid var(--sw-border-light); border-radius: 4px; padding: 10px; background: #fff;">
               <!-- Dynamicznie generowane -->
             </div>
           </div>
@@ -580,6 +608,42 @@
          ==================================================================== -->
     <section id="view-sheet" class="sw-view">
       
+      <!-- Pasek akcji edycji nad arkuszem (styl dopasowany do reszty aplikacji, ukryty w druku) -->
+      <div class="sheet-top-bar no-print" id="sheet-top-bar">
+        <div class="sheet-top-bar-main">
+          <div class="sheet-top-bar-info">
+            <span class="sheet-top-bar-icon">📜</span>
+            <div>
+              <div class="sheet-top-bar-title">
+                Arkusz postaci: <strong id="sheet-bar-char-name">Nowy Bohater</strong>
+                <span class="sheet-edit-status-pill" id="sheet-edit-status-pill">Podgląd</span>
+              </div>
+              <div class="sheet-top-bar-sub" id="sheet-edit-subtext">
+                Kliknij „Tryb edycji”, aby edytować pola i kości na arkuszu lub przejść do wybranej sekcji Kreatora.
+              </div>
+            </div>
+          </div>
+          <div class="sheet-top-bar-actions">
+            <button type="button" class="sw-btn btn-primary" id="btn-toggle-sheet-edit">
+              <span>✏️</span> Tryb edycji
+            </button>
+            <button type="button" class="sw-btn btn-success" id="btn-sheet-quick-save" title="Zapisz zmiany w tej postaci">
+              <span>💾</span> Zapisz zmiany
+            </button>
+          </div>
+        </div>
+        <div class="sheet-top-bar-drawer" id="sheet-edit-drawer" style="display: none;">
+          <span class="sheet-drawer-label">Edytuj sekcję w Kreatorze:</span>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="1">1. Dane i Rasa</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="2">2. Zawady</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="3">3. Cechy</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="4">4. Umiejętności</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="5">5. Przewagi</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="6">6. Sprzęt i Broń</button>
+          <button type="button" class="sw-btn btn-sm" data-sheet-goto-step="7">7. Moce</button>
+        </div>
+      </div>
+
       <div class="sw-sheet-wrapper">
         
         <!-- STRONA 1: GŁÓWNA KARTA POSTACI -->
@@ -679,6 +743,10 @@
                   <span class="sheet-bio-label">IMIĘ:</span>
                   <span class="sheet-bio-val" id="sheet-name">—</span>
                 </div>
+                <div class="sheet-bio-field" style="grid-column: span 2; flex-direction: column; align-items: flex-start; gap: 3px;">
+                  <span class="sheet-bio-label">KONCEPCJA / ARCHETYP:</span>
+                  <div class="sheet-bio-val" id="sheet-concept" style="width: 100%; line-height: 1.35; word-break: break-word;">—</div>
+                </div>
                 <div class="sheet-bio-field">
                   <span class="sheet-bio-label">RASA:</span>
                   <span class="sheet-bio-val" id="sheet-race">—</span>
@@ -749,10 +817,10 @@
             <!-- Prawa kolumna: ZAWADY, PRZEWAGI I ROZWINIĘCIA, RANY & ZMĘCZENIE -->
             <div class="sheet-right-col">
               
-              <!-- TOR 1: ZDROWIE FIZYCZNE (RANY I ZMĘCZENIE) -->
+              <!-- TOR ZDROWIA (RANY I ZMĘCZENIE) -->
               <div class="sw-tape-note" style="padding: 10px;">
                 <div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; text-align: center; color: var(--sw-red-dark);">
-                  TOR ZDROWIA FIZYCZNEGO (RANY I ZMĘCZENIE)
+                  RANY I ZMĘCZENIE
                 </div>
                 <div class="sheet-wounds-tracker">
                   <div class="wound-step">
@@ -771,7 +839,6 @@
                     <span style="color: var(--sw-red);">K.O.</span>
                     <div class="wound-box" data-wound="ko"></div>
                   </div>
-                  <div style="border-left: 1px solid #ccc; height: 30px; margin: 0 4px;"></div>
                   <div class="wound-step">
                     <span>Zm -1</span>
                     <div class="wound-box" data-fatigue="1"></div>
@@ -780,37 +847,6 @@
                     <span>Zm -2</span>
                     <div class="wound-box" data-fatigue="2"></div>
                   </div>
-                </div>
-              </div>
-
-              <!-- TOR 2: POCZYTALNOŚĆ (ZDROWIE PSYCHICZNE / SZALEŃSTWO) -->
-              <div class="sw-tape-note" style="padding: 10px;">
-                <div style="font-family: var(--font-heading); font-size: 0.85rem; font-weight: bold; margin-bottom: 6px; text-align: center; color: #4a2373;">
-                  POCZYTALNOŚĆ (ZDROWIE PSYCHICZNE)
-                </div>
-                <div class="sheet-wounds-tracker" style="background: #f7f2fc; border-color: #d1bfe8;">
-                  <div class="wound-step">
-                    <span>-1</span>
-                    <div class="wound-box sanity-box" data-sanity="1"></div>
-                  </div>
-                  <div class="wound-step">
-                    <span>-2</span>
-                    <div class="wound-box sanity-box" data-sanity="2"></div>
-                  </div>
-                  <div class="wound-step">
-                    <span>-3</span>
-                    <div class="wound-box sanity-box" data-sanity="3"></div>
-                  </div>
-                  <div class="wound-step">
-                    <span style="color: #6a1b9a;">Obłęd</span>
-                    <div class="wound-box sanity-box" data-sanity="ko"></div>
-                  </div>
-                </div>
-                <div style="margin-top: 8px;">
-                  <label for="char-sanity-notes" style="font-size: 0.75rem; font-weight: bold; color: #555; display: block; margin-bottom: 2px;">
-                    Fobie / Urazy psychiczne:
-                  </label>
-                  <input type="text" id="char-sanity-notes" class="form-control" placeholder="np. Lęk wysokości, Paranoja, Widzi cienie..." style="font-size: 0.8rem; padding: 4px 8px; width: 100%;">
                 </div>
               </div>
 
@@ -1129,9 +1165,9 @@
   </div>
 
   <!-- Skrypty bazy danych i aplikacji -->
-  <script src="data.js"></script>
-  <script src="data_horror.js"></script>
-  <script src="data_fantasy.js"></script>
-  <script src="app.js"></script>
+  <script src="data.js?v=20261026_7"></script>
+  <script src="data_horror.js?v=20261026_7"></script>
+  <script src="data_fantasy.js?v=20261026_7"></script>
+  <script src="app.js?v=20261026_7"></script>
 </body>
 </html>

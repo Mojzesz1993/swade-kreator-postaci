@@ -72,8 +72,8 @@
   const appState = {
     activeModules: {
       swep: true,
-      horror: false,
-      fantasy: false
+      horror: true,
+      fantasy: true
     },
     catalogFilters: {
       raceMod: 'all',
@@ -118,14 +118,120 @@
   }
 
   function getAllHindrances() {
-    let list = SW_DATA.hindrances.map(h => ({ ...h, source: h.source || 'swep' }));
+    let rawList = SW_DATA.hindrances.map(h => ({ ...h, source: h.source || 'swep', sources: [h.source || 'swep'] }));
     if (appState.activeModules.horror && typeof HORROR_DATA !== 'undefined' && HORROR_DATA.hindrances) {
-      list.push(...HORROR_DATA.hindrances);
+      rawList.push(...HORROR_DATA.hindrances.map(h => ({ ...h, source: h.source || 'horror', sources: [h.source || 'horror'] })));
     }
     if (appState.activeModules.fantasy && typeof FANTASY_DATA !== 'undefined' && FANTASY_DATA.hindrances) {
-      list.push(...FANTASY_DATA.hindrances);
+      rawList.push(...FANTASY_DATA.hindrances.map(h => ({ ...h, source: h.source || 'fantasy', sources: [h.source || 'fantasy'] })));
     }
-    return list;
+
+    const byName = new Map();
+    rawList.forEach(h => {
+      const key = h.name.trim().toLowerCase();
+      if (!byName.has(key)) {
+        byName.set(key, { ...h, sources: [...(h.sources || [h.source || 'swep'])] });
+      } else {
+        const existing = byName.get(key);
+        const src = h.source || 'swep';
+        if (!existing.sources.includes(src)) {
+          existing.sources.push(src);
+        }
+      }
+    });
+    return Array.from(byName.values());
+  }
+
+  function getHindranceMode(hObj) {
+    const s = (hObj.severity || hObj.type || '').toLowerCase();
+    if (s.includes('/') || s.includes('lub')) return 'dual';
+    if (s.includes('poważna') || s.includes('większa') || s.includes('major')) return 'powazna';
+    return 'drobna';
+  }
+
+  function hasArcaneBackground() {
+    if (!currentChar) return false;
+    if (currentChar.powers && currentChar.powers.length > 0) return true;
+    return (currentChar.edges || []).some(e => {
+      const nm = (e.name || '').toLowerCase();
+      const cat = (e.category || e.type || '').toLowerCase();
+      return !!e.isArcaneBackground ||
+             nm.includes('zdolności nadprzyrodzone') ||
+             nm.includes('pochodzenie niesamowite') ||
+             cat.includes('nadprzyrodzone');
+    });
+  }
+
+  const HINDRANCE_MUTUAL_EXCLUSIONS = {
+    'grubas': ['Konus'],
+    'konus': ['Grubas'],
+    'ostrożny': ['Porywczy'],
+    'porywczy': ['Ostrożny'],
+    'chojrak': ['Tchórz'],
+    'tchórz': ['Chojrak'],
+    'bohaterski': ['Bezwzględny'],
+    'bezwzględny': ['Bohaterski'],
+    'ślepiec': ['Jednooki', 'Kiepski wzrok'],
+    'jednooki': ['Ślepiec'],
+    'kiepski wzrok': ['Ślepiec'],
+    'dzieciak': ['Ramol'],
+    'ramol': ['Dzieciak']
+  };
+
+  const HINDRANCE_EDGE_EXCLUSIONS = {
+    'grubas': ['Krzepki'],
+    'pech': ['Szczęściarz', 'Cholerny szczęściarz'],
+    'powolny': ['Chyży'],
+    'niezdecydowany': ['Błyskawiczny refleks', 'Opanowany', 'Bardzo opanowany'],
+    'biedak': ['Bogaty', 'Krezus']
+  };
+
+  const ARCANE_REQUIRED_HINDRANCES = [
+    'splugawienie',
+    'komponenty materialne',
+    'krępowanie przez pancerz',
+    'talizman'
+  ];
+
+  function checkHindranceConstraints(hObj) {
+    const key = (hObj.name || '').trim().toLowerCase();
+    const chosenHinds = currentChar.hindrances || [];
+    const chosenEdges = currentChar.edges || [];
+
+    const mutHinds = HINDRANCE_MUTUAL_EXCLUSIONS[key] || [];
+    for (const excl of mutHinds) {
+      if (chosenHinds.some(ch => ch.name.trim().toLowerCase() === excl.toLowerCase())) {
+        return { blocked: true, reason: `Wyklucza się z wybraną Zawadą: ${excl}` };
+      }
+    }
+
+    const mutEdges = HINDRANCE_EDGE_EXCLUSIONS[key] || [];
+    for (const excl of mutEdges) {
+      if (chosenEdges.some(ce => ce.name.trim().toLowerCase() === excl.toLowerCase())) {
+        return { blocked: true, reason: `Wyklucza się z wybraną Przewagą: ${excl}` };
+      }
+    }
+
+    let warning = null;
+    if (ARCANE_REQUIRED_HINDRANCES.includes(key) && !hasArcaneBackground()) {
+      warning = 'Wymaga Przewagi: Zdolności nadprzyrodzone / Pochodzenie Niesamowite (Krok 5)';
+    }
+
+    return { blocked: false, reason: null, warning };
+  }
+
+  function checkEdgeConflictWithHindrances(edgeName) {
+    const eLower = (edgeName || '').trim().toLowerCase();
+    const chosenHinds = currentChar.hindrances || [];
+    for (const [hKey, edgeList] of Object.entries(HINDRANCE_EDGE_EXCLUSIONS)) {
+      if (edgeList.some(en => en.toLowerCase() === eLower)) {
+        const foundHind = chosenHinds.find(ch => ch.name.trim().toLowerCase() === hKey);
+        if (foundHind) {
+          return { blocked: true, reason: `Wyklucza się z Zawadą: ${foundHind.name}` };
+        }
+      }
+    }
+    return { blocked: false, reason: null };
   }
 
   function getAllEdges() {
@@ -265,7 +371,7 @@
       appearance: '',
       raceId: 'czlowiek',
       raceName: 'Człowiek',
-      activeModules: { swep: true, horror: false, fantasy: false },
+      activeModules: { swep: true, horror: true, fantasy: true },
       rank: 'Nowicjusz',
       advancesCount: 0,
       advancesList: [],
@@ -304,6 +410,7 @@
   // --- STAN APLIKACJI ---
   let currentChar = createDefaultCharacter();
   let currentWizardStep = 1;
+  let isSheetInlineEdit = false;
   let activeEquipCategory = 'weapons_melee';
   let currentSkillFilterCategory = 'all';
   let currentSkillFilterText = '';
@@ -341,8 +448,14 @@
       });
     }
 
+    let baseAttrPts = SW_DATA.rules.attributePoints;
+    const dzieciakHind = (currentChar.hindrances || []).find(h => h.name.trim().toLowerCase() === 'dzieciak');
+    if (dzieciakHind) {
+      baseAttrPts = (dzieciakHind.severity === 'Poważna') ? 3 : 4;
+    }
+
     const bonusFromHindrances = currentChar.hindranceSpend.attr || 0;
-    const totalAllowed = SW_DATA.rules.attributePoints + bonusFromHindrances + bonusFromAdvances;
+    const totalAllowed = baseAttrPts + bonusFromHindrances + bonusFromAdvances;
     return {
       spent: spent,
       total: totalAllowed,
@@ -386,8 +499,16 @@
       });
     }
 
+    let baseSkillPts = SW_DATA.rules.skillPoints;
+    if ((currentChar.hindrances || []).some(h => h.name.trim().toLowerCase() === 'dzieciak')) {
+      baseSkillPts = 10;
+    }
+    if ((currentChar.hindrances || []).some(h => h.name.trim().toLowerCase() === 'ramol')) {
+      baseSkillPts += 5;
+    }
+
     const bonusFromHindrances = currentChar.hindranceSpend.skill || 0;
-    const totalAllowed = SW_DATA.rules.skillPoints + bonusFromHindrances + bonusFromAdvances;
+    const totalAllowed = baseSkillPts + bonusFromHindrances + bonusFromAdvances;
     return {
       spent: spent,
       total: totalAllowed,
@@ -418,22 +539,52 @@
 
   // Wyliczanie punktów z Zawad
   function calcHindrancePoints() {
-    let earned = 0;
-    currentChar.hindrances.forEach(h => {
-      if (h.severity === 'Poważna') earned += 2;
-      else earned += 1;
+    let rawEarned = 0;
+    (currentChar.hindrances || []).forEach(h => {
+      if (typeof h.points === 'number' && !isNaN(h.points)) {
+        rawEarned += h.points;
+      } else {
+        const sev = (h.severity || h.type || '').toLowerCase();
+        if (sev === 'poważna' || sev === 'większa') rawEarned += 2;
+        else rawEarned += 1;
+      }
     });
 
-    earned = Math.min(earned, SW_DATA.rules.maxHindrancePoints);
+    const earned = Math.min(rawEarned, SW_DATA.rules.maxHindrancePoints);
 
-    const spend = currentChar.hindranceSpend;
+    const spend = currentChar.hindranceSpend || { attr: 0, edge: 0, skill: 0, funds: 0 };
     const spent = (spend.attr * 2) + (spend.edge * 2) + (spend.skill * 1) + (spend.funds * 1);
 
     return {
       earned: earned,
+      rawEarned: rawEarned,
       spent: spent,
       remaining: earned - spent
     };
+  }
+
+  // Automatyczna redukcja wydanych punktów z Zawad, gdy usunięto lub zmniejszono Zawadę
+  function clampHindranceSpend() {
+    let pts = calcHindrancePoints();
+    const spend = currentChar.hindranceSpend;
+    let safety = 10;
+    while (pts.remaining < 0 && safety > 0) {
+      safety--;
+      if (pts.remaining === -1) {
+        if (spend.funds > 0) spend.funds--;
+        else if (spend.skill > 0) spend.skill--;
+        else if (spend.edge > 0) spend.edge--;
+        else if (spend.attr > 0) spend.attr--;
+        else break;
+      } else {
+        if (spend.edge > 0) spend.edge--;
+        else if (spend.attr > 0) spend.attr--;
+        else if (spend.funds > 0) spend.funds--;
+        else if (spend.skill > 0) spend.skill--;
+        else break;
+      }
+      pts = calcHindrancePoints();
+    }
   }
 
   // Wyliczanie dostępnych darmowych Przewag
@@ -443,6 +594,11 @@
     if (race.free_edges) allowed += race.free_edges;
 
     allowed += (currentChar.hindranceSpend.edge || 0);
+
+    // Zawada Ślepiec zapewnia 1 dodatkową darmową Przewagę (SWEP str. 27)
+    if ((currentChar.hindrances || []).some(h => h.name.trim().toLowerCase() === 'ślepiec')) {
+      allowed += 1;
+    }
 
     if (currentChar.advancesList) {
       currentChar.advancesList.forEach(a => {
@@ -461,9 +617,15 @@
   // Wyliczanie Funduszy
   function calcFunds() {
     let starting = SW_DATA.rules.startingFunds;
+    if ((currentChar.hindrances || []).some(h => h.name.trim().toLowerCase() === 'biedak')) {
+      starting = Math.floor(starting / 2);
+    }
+
     starting += (currentChar.hindranceSpend.funds || 0) * 500;
 
-    if (currentChar.edges.some(e => e.name.toLowerCase().includes('bogaty'))) {
+    if (currentChar.edges.some(e => e.name.toLowerCase().includes('krezus'))) {
+      starting *= 5;
+    } else if (currentChar.edges.some(e => e.name.toLowerCase().includes('bogaty'))) {
       starting *= 3;
     }
 
@@ -524,7 +686,7 @@
       baseParry += 1;
     }
 
-    // 2. WYTRZYMAŁOŚĆ (Toughness)
+    // 2. WYTRZYMAŁOŚĆ (Toughness) i ROZMIAR (Size)
     // 2 + połowa Wigoru + Pancerz + Rozmiar
     const vigorDie = currentChar.attributes.wigor || 'k4';
     const vigorVal = DIE_VALUES[vigorDie] || 4;
@@ -538,11 +700,31 @@
     });
 
     const race = getRaceConfig(currentChar.raceId);
+    let size = (race.size !== undefined) ? race.size : 0;
     if (race.toughness_mod) baseToughness += race.toughness_mod;
     if (race.armor_mod) armorVal += race.armor_mod;
 
     if (currentChar.edges.some(e => e.name.toLowerCase().includes('krzepki'))) {
+      size += 1;
       baseToughness += 1;
+    }
+
+    const hinds = currentChar.hindrances || [];
+    const hasGrubas = hinds.some(h => h.name.trim().toLowerCase() === 'grubas');
+    const hasKonus = hinds.some(h => h.name.trim().toLowerCase() === 'konus');
+    const dzieciak = hinds.find(h => h.name.trim().toLowerCase() === 'dzieciak');
+    const hasRamol = hinds.some(h => h.name.trim().toLowerCase() === 'ramol');
+    const powolny = hinds.find(h => h.name.trim().toLowerCase() === 'powolny');
+
+    if (hasGrubas) {
+      size += 1;
+      baseToughness += 1;
+    }
+    if (hasKonus || (dzieciak && dzieciak.severity === 'Poważna')) {
+      if (size > -1) {
+        size -= 1;
+        baseToughness -= 1;
+      }
     }
 
     // 3. TEMPO (Pace)
@@ -556,12 +738,33 @@
       runningDie = 'k8';
     }
 
+    if (hasGrubas) {
+      pace -= 1;
+      runningDie = 'k4';
+    }
+    if (powolny) {
+      if (powolny.severity === 'Poważna') {
+        pace -= 2;
+      } else {
+        pace -= 1;
+      }
+      runningDie = getPrevDie(runningDie) || 'k4';
+    }
+    if (hasRamol) {
+      pace -= 1;
+      runningDie = getPrevDie(runningDie) || 'k4';
+    }
+    pace = Math.max(1, pace);
+
     // 4. FUKSY (Bennies)
     let bennies = 3;
     if (currentChar.raceId === 'niziolek') bennies += 1;
     if (currentChar.edges.some(e => e.name.toLowerCase() === 'szczęściarz')) bennies += 1;
     if (currentChar.edges.some(e => e.name.toLowerCase() === 'cholerny szczęściarz')) bennies += 2;
-    if (currentChar.hindrances.some(h => h.name.toLowerCase() === 'pech')) bennies -= 1;
+    if (dzieciak) {
+      bennies += (dzieciak.severity === 'Poważna') ? 2 : 1;
+    }
+    if (hinds.some(h => h.name.toLowerCase() === 'pech')) bennies -= 1;
 
     // 5. RANGA
     const advances = currentChar.advancesCount || 0;
@@ -578,6 +781,7 @@
       toughness: baseToughness + armorVal,
       toughnessBase: baseToughness,
       armor: armorVal,
+      size: size,
       pace: pace,
       runningDie: runningDie,
       bennies: Math.max(1, bennies),
@@ -606,7 +810,11 @@
     badgeSkill.className = 'tracker-badge ' + (skill.remaining === 0 ? 'valid' : (skill.remaining < 0 ? 'warning' : ''));
 
     const elHind = document.getElementById('val-hindrance-points');
+    const badgeHind = document.getElementById('badge-hind');
     elHind.textContent = `${hind.earned} / 4 (Wydano: ${hind.spent})`;
+    if (badgeHind) {
+      badgeHind.className = 'tracker-badge ' + (hind.remaining === 0 && hind.earned > 0 ? 'valid' : (hind.remaining < 0 ? 'warning' : ''));
+    }
 
     const elFunds = document.getElementById('val-funds');
     elFunds.textContent = `$${funds.current}`;
@@ -932,48 +1140,154 @@
     if (!catalog || !selected) return;
 
     const filterText = (document.getElementById('filter-hindrances').value || '').toLowerCase();
+    const filterSevEl = document.getElementById('filter-hindrances-severity');
+    const filterSev = filterSevEl ? filterSevEl.value : 'all';
+    const allowExtraEl = document.getElementById('chk-allow-extra-hindrances');
+    const allowExtra = allowExtraEl ? allowExtraEl.checked : false;
+
     const allHindrances = getAllHindrances();
     const filterMod = appState.catalogFilters.hindMod || 'all';
+    const hindPts = calcHindrancePoints();
+    const maxPts = SW_DATA.rules.maxHindrancePoints; // 4
+
+    // Aktualizacja paska podsumowania punktów w Kroku 2
+    const bannerEarned = document.getElementById('hind-banner-earned');
+    const bannerSpent = document.getElementById('hind-banner-spent');
+    const bannerRem = document.getElementById('hind-banner-remaining');
+    if (bannerEarned) {
+      bannerEarned.textContent = `${hindPts.earned} / ${maxPts} pkt`;
+      bannerEarned.style.color = hindPts.earned === maxPts ? '#1a6e25' : 'var(--sw-ink)';
+    }
+    if (bannerSpent) {
+      bannerSpent.textContent = `${hindPts.spent} / ${hindPts.earned} pkt`;
+    }
+    if (bannerRem) {
+      bannerRem.textContent = `${hindPts.remaining} pkt`;
+      bannerRem.style.color = hindPts.remaining > 0 ? 'var(--sw-red)' : '#1a6e25';
+    }
 
     // Katalog
     catalog.innerHTML = '';
     const visibleHindrances = allHindrances.filter(h => {
-      const src = h.source || 'swep';
-      if (filterMod !== 'all' && src !== filterMod) return false;
+      const srcs = h.sources || [h.source || 'swep'];
+      if (filterMod !== 'all' && !srcs.includes(filterMod)) return false;
+
+      const mode = getHindranceMode(h);
+      if (filterSev !== 'all') {
+        if (filterSev === 'drobna' && mode !== 'drobna' && mode !== 'dual') return false;
+        if (filterSev === 'powazna' && mode !== 'powazna' && mode !== 'dual') return false;
+        if (filterSev === 'dual' && mode !== 'dual') return false;
+      }
+
       if (filterText && !h.name.toLowerCase().includes(filterText) && !h.desc.toLowerCase().includes(filterText)) {
         return false;
       }
       return true;
     });
 
+    const countLabel = document.getElementById('hindrances-count-label');
+    if (countLabel) countLabel.textContent = visibleHindrances.length;
+
     if (visibleHindrances.length === 0) {
       catalog.innerHTML = '<div style="text-align: center; color: #888; padding: 20px; font-style: italic;">Brak zawad w wybranym filtrze.</div>';
     }
 
     visibleHindrances.forEach(h => {
-      const isChosen = currentChar.hindrances.some(ch => ch.name === h.name);
+      const chosenObj = currentChar.hindrances.find(ch => ch.name.trim().toLowerCase() === h.name.trim().toLowerCase());
+      const isChosen = !!chosenObj;
+      const mode = getHindranceMode(h);
+      const constraint = checkHindranceConstraints(h);
+
       const item = document.createElement('div');
-      item.style.padding = '8px';
+      item.style.padding = '9px 8px';
       item.style.borderBottom = '1px solid #eee';
       item.style.display = 'flex';
       item.style.justifyContent = 'space-between';
       item.style.alignItems = 'center';
       item.style.gap = '10px';
+      if (constraint.blocked && !isChosen) {
+        item.style.opacity = '0.65';
+        item.style.background = '#fafafa';
+      }
 
-      const sevText = h.severity || h.type || 'Mniejsza';
+      let sevBadgeHtml = '';
+      if (mode === 'dual') {
+        sevBadgeHtml = '<span class="hind-severity-badge hind-sev-dual">Drobna (1) / Poważna (2)</span>';
+      } else if (mode === 'powazna') {
+        sevBadgeHtml = '<span class="hind-severity-badge hind-sev-major">Poważna (2 pkt)</span>';
+      } else {
+        sevBadgeHtml = '<span class="hind-severity-badge hind-sev-minor">Drobna (1 pkt)</span>';
+      }
+
+      const sourceBadges = (h.sources || [h.source || 'swep']).map(s => getSourceBadgeHtml(s)).join(' ');
+
+      let constraintHtml = '';
+      if (constraint.blocked && !isChosen) {
+        constraintHtml = `<div style="font-size: 0.76rem; color: #b91c1c; font-weight: 600; margin-top: 3px;">🔒 ${constraint.reason}</div>`;
+      } else if (constraint.warning) {
+        constraintHtml = `<div style="font-size: 0.76rem; color: #b45309; margin-top: 3px;">⚠️ ${constraint.warning}</div>`;
+      }
+
+      let buttonsHtml = '';
+      if (isChosen) {
+        buttonsHtml = `<button class="sw-btn" disabled style="white-space: nowrap; font-size: 0.78rem;">✓ Wybrano (${chosenObj.severity})</button>`;
+      } else if (constraint.blocked) {
+        buttonsHtml = `<button class="sw-btn" disabled title="${constraint.reason}" style="white-space: nowrap; font-size: 0.78rem;">🔒 Wykluczone</button>`;
+      } else {
+        const canMinorPoints = (hindPts.earned + 1 <= maxPts);
+        const canMajorPoints = (hindPts.earned + 2 <= maxPts);
+
+        const minorBtnDisabled = !canMinorPoints && !allowExtra;
+        const majorBtnDisabled = !canMajorPoints && !allowExtra;
+
+        const minorPtsToGrant = canMinorPoints ? 1 : 0;
+        const majorPtsToGrant = canMajorPoints ? 2 : 0;
+
+        const minorLabel = canMinorPoints ? '+ Drobna (1 pkt)' : '+ Drobna (0 pkt)';
+        const majorLabel = canMajorPoints ? '+ Poważna (2 pkt)' : '+ Poważna (0 pkt)';
+
+        const minorTitle = minorBtnDisabled ? 'Osiągnięto limit 4 punktów z Zawad (włącz opcję Zawad fabularnych 0 pkt powyżej)' : 'Dodaj jako Zawadę Drobną';
+        const majorTitle = majorBtnDisabled ? 'Dodanie Poważnej Zawady (2 pkt) przekroczyłoby limit 4 punktów' : 'Dodaj jako Zawadę Poważną';
+
+        buttonsHtml = '<div class="hind-btn-group">';
+        if (mode === 'drobna' || mode === 'dual') {
+          buttonsHtml += `
+            <button class="sw-btn ${minorBtnDisabled ? '' : 'btn-primary'}" 
+                    data-add-hindrance="${h.name}" 
+                    data-hind-sev="Drobna" 
+                    data-hind-pts="${minorPtsToGrant}"
+                    title="${minorTitle}"
+                    style="white-space: nowrap; font-size: 0.78rem; padding: 5px 9px;" 
+                    ${minorBtnDisabled ? 'disabled' : ''}>
+              ${minorLabel}
+            </button>`;
+        }
+        if (mode === 'powazna' || mode === 'dual') {
+          buttonsHtml += `
+            <button class="sw-btn ${majorBtnDisabled ? '' : 'btn-primary'}" 
+                    data-add-hindrance="${h.name}" 
+                    data-hind-sev="Poważna" 
+                    data-hind-pts="${majorPtsToGrant}"
+                    title="${majorTitle}"
+                    style="white-space: nowrap; font-size: 0.78rem; padding: 5px 9px;" 
+                    ${majorBtnDisabled ? 'disabled' : ''}>
+              ${majorLabel}
+            </button>`;
+        }
+        buttonsHtml += '</div>';
+      }
 
       item.innerHTML = `
         <div style="flex: 1;">
           <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <strong>${h.name}</strong> 
-            <span style="font-size: 0.8rem; color: #666;">(${sevText})</span>
-            ${getSourceBadgeHtml(h.source)}
+            ${sevBadgeHtml}
+            ${sourceBadges}
           </div>
-          <div style="font-size: 0.8rem; color: #555; margin-top: 2px;">${h.desc}</div>
+          <div style="font-size: 0.8rem; color: #555; margin-top: 3px;">${h.desc}</div>
+          ${constraintHtml}
         </div>
-        <button class="sw-btn ${isChosen ? '' : 'btn-primary'}" data-add-hindrance="${h.name}" style="white-space: nowrap; font-size: 0.8rem;" ${isChosen ? 'disabled' : ''}>
-          ${isChosen ? 'Wybrano' : '+ Wybierz'}
-        </button>
+        ${buttonsHtml}
       `;
 
       catalog.appendChild(item);
@@ -982,73 +1296,155 @@
     catalog.querySelectorAll('[data-add-hindrance]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const hName = e.currentTarget.dataset.addHindrance;
+        const chosenSev = e.currentTarget.dataset.hindSev || 'Drobna';
+        const chosenPts = parseInt(e.currentTarget.dataset.hindPts, 10);
         const allH = getAllHindrances();
         const hObj = allH.find(x => x.name === hName);
-        if (hObj && !currentChar.hindrances.some(x => x.name === hName)) {
-          let pts = 1;
-          let sev = 'Drobna';
-          const s = (hObj.severity || hObj.type || '').toLowerCase();
-          if (s.includes('większa') || s.includes('poważna') || s.includes('major')) {
-            pts = 2;
-            sev = 'Poważna';
+        if (hObj && !currentChar.hindrances.some(x => x.name.trim().toLowerCase() === hName.trim().toLowerCase())) {
+          const check = checkHindranceConstraints(hObj);
+          if (check.blocked) {
+            alert(check.reason);
+            return;
           }
           currentChar.hindrances.push({
             name: hObj.name,
-            severity: sev,
-            points: pts,
+            severity: chosenSev,
+            points: isNaN(chosenPts) ? (chosenSev === 'Poważna' ? 2 : 1) : chosenPts,
             desc: hObj.desc,
+            customNote: '',
             source: hObj.source || 'swep'
           });
           renderHindrances();
+          renderAttributesCreator();
+          renderSkillsCreator();
+          renderEdges();
           updateTrackerBadges();
           renderSheet();
         }
       });
     });
 
-    // Wybrane
+    // Wybrane Zawady
     selected.innerHTML = '';
     if (currentChar.hindrances.length === 0) {
-      selected.innerHTML = '<div style="color: #888; font-style: italic; padding: 10px;">Nie wybrano jeszcze żadnych Zawad.</div>';
+      selected.innerHTML = '<div style="color: #888; font-style: italic; padding: 10px;">Nie wybrano jeszcze żadnych Zawad. Możesz zdobyć maksymalnie 4 punkty (np. 1 Poważna i 2 Drobne).</div>';
     } else {
       currentChar.hindrances.forEach((h, idx) => {
+        const catalogMatch = allHindrances.find(ch => ch.name.trim().toLowerCase() === h.name.trim().toLowerCase());
+        const isDual = catalogMatch ? (getHindranceMode(catalogMatch) === 'dual') : false;
+        const ptsNum = (typeof h.points === 'number') ? h.points : (h.severity === 'Poważna' ? 2 : 1);
+
+        let switchSevBtnHtml = '';
+        if (isDual) {
+          if (h.severity === 'Drobna') {
+            const canUpgradePaid = (hindPts.earned - ptsNum + 2 <= maxPts);
+            if (canUpgradePaid) {
+              switchSevBtnHtml = `<button class="sw-btn" data-toggle-hind-sev="${idx}" data-target-sev="Poważna" data-target-pts="2" style="font-size: 0.72rem; padding: 2px 6px;" title="Zmień stopień na Poważną (2 pkt)">⬆ Zmień na Poważną (2 pkt)</button>`;
+            } else if (allowExtra) {
+              switchSevBtnHtml = `<button class="sw-btn" data-toggle-hind-sev="${idx}" data-target-sev="Poważna" data-target-pts="0" style="font-size: 0.72rem; padding: 2px 6px;" title="Zmień stopień na Poważną (0 pkt - fabularna)">⬆ Zmień na Poważną (0 pkt)</button>`;
+            }
+          } else {
+            const targetMinorPts = (ptsNum === 0 && hindPts.earned >= maxPts) ? 0 : 1;
+            switchSevBtnHtml = `<button class="sw-btn" data-toggle-hind-sev="${idx}" data-target-sev="Drobna" data-target-pts="${targetMinorPts}" style="font-size: 0.72rem; padding: 2px 6px;" title="Zmień stopień na Drobną (${targetMinorPts} pkt)">⬇ Zmień na Drobną (${targetMinorPts} pkt)</button>`;
+          }
+        }
+
+        const ptsLabel = ptsNum === 0 ? '0 pkt - fabularna' : `${ptsNum} pkt`;
+
         const item = document.createElement('div');
-        item.style.padding = '6px 10px';
+        item.style.padding = '8px 10px';
         item.style.background = '#fef6f6';
         item.style.border = '1px solid #f0d0d0';
         item.style.borderRadius = '4px';
-        item.style.marginBottom = '6px';
-        item.style.display = 'flex';
-        item.style.justifyContent = 'space-between';
-        item.style.alignItems = 'center';
+        item.style.marginBottom = '8px';
 
         item.innerHTML = `
-          <div>
-            <strong>${h.name}</strong> 
-            <span style="font-size: 0.8rem; color: var(--sw-red);">(${h.severity} - ${h.points} pkt)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div>
+              <strong>${h.name}</strong> 
+              <span style="font-size: 0.8rem; color: var(--sw-red); font-weight: 600;">(${h.severity} — ${ptsLabel})</span>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              ${switchSevBtnHtml}
+              <button class="sw-btn" data-remove-hindrance="${idx}" style="font-size: 0.75rem; padding: 2px 6px;">✕ Usuń</button>
+            </div>
           </div>
-          <button class="sw-btn" data-remove-hindrance="${idx}" style="font-size: 0.75rem; padding: 2px 6px;">✕ Usuń</button>
+          <div style="font-size: 0.78rem; color: #555; margin-top: 3px;">${h.desc || ''}</div>
+          <div style="margin-top: 5px;">
+            <input type="text" class="form-control" data-hind-note="${idx}" value="${(h.customNote || '').replace(/"/g, '&quot;')}" placeholder="Szczegóły (np. czego dotyczy Fobia, Przysięga, Nawyk, Wróg...)" style="font-size: 0.78rem; padding: 3px 8px; height: auto;">
+          </div>
         `;
 
         selected.appendChild(item);
+      });
+
+      selected.querySelectorAll('[data-toggle-hind-sev]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.toggleHindSev, 10);
+          const targetSev = e.currentTarget.dataset.targetSev;
+          const targetPts = parseInt(e.currentTarget.dataset.targetPts, 10);
+          if (currentChar.hindrances[idx]) {
+            currentChar.hindrances[idx].severity = targetSev;
+            currentChar.hindrances[idx].points = targetPts;
+            clampHindranceSpend();
+            renderHindrances();
+            renderAttributesCreator();
+            renderSkillsCreator();
+            renderEdges();
+            updateTrackerBadges();
+            renderSheet();
+          }
+        });
+      });
+
+      selected.querySelectorAll('[data-hind-note]').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.hindNote, 10);
+          if (currentChar.hindrances[idx]) {
+            currentChar.hindrances[idx].customNote = e.target.value;
+            renderSheet();
+          }
+        });
       });
 
       selected.querySelectorAll('[data-remove-hindrance]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const idx = parseInt(e.currentTarget.dataset.removeHindrance, 10);
           currentChar.hindrances.splice(idx, 1);
+          clampHindranceSpend();
           renderHindrances();
+          renderAttributesCreator();
+          renderSkillsCreator();
+          renderEdges();
           updateTrackerBadges();
           renderSheet();
         });
       });
     }
 
-    // Odświeżenie pól wymiany
+    // Odświeżenie pól i blokad przycisków wymiany
     document.getElementById('spend-attr-val').textContent = currentChar.hindranceSpend.attr;
     document.getElementById('spend-edge-val').textContent = currentChar.hindranceSpend.edge;
     document.getElementById('spend-skill-val').textContent = currentChar.hindranceSpend.skill;
     document.getElementById('spend-funds-val').textContent = currentChar.hindranceSpend.funds;
+
+    const btnAttrPlus = document.getElementById('btn-spend-attr-plus');
+    const btnAttrMinus = document.getElementById('btn-spend-attr-minus');
+    const btnEdgePlus = document.getElementById('btn-spend-edge-plus');
+    const btnEdgeMinus = document.getElementById('btn-spend-edge-minus');
+    const btnSkillPlus = document.getElementById('btn-spend-skill-plus');
+    const btnSkillMinus = document.getElementById('btn-spend-skill-minus');
+    const btnFundsPlus = document.getElementById('btn-spend-funds-plus');
+    const btnFundsMinus = document.getElementById('btn-spend-funds-minus');
+
+    if (btnAttrPlus) btnAttrPlus.disabled = (hindPts.remaining < 2);
+    if (btnAttrMinus) btnAttrMinus.disabled = (currentChar.hindranceSpend.attr <= 0);
+    if (btnEdgePlus) btnEdgePlus.disabled = (hindPts.remaining < 2);
+    if (btnEdgeMinus) btnEdgeMinus.disabled = (currentChar.hindranceSpend.edge <= 0);
+    if (btnSkillPlus) btnSkillPlus.disabled = (hindPts.remaining < 1);
+    if (btnSkillMinus) btnSkillMinus.disabled = (currentChar.hindranceSpend.skill <= 0);
+    if (btnFundsPlus) btnFundsPlus.disabled = (hindPts.remaining < 1);
+    if (btnFundsMinus) btnFundsMinus.disabled = (currentChar.hindranceSpend.funds <= 0);
   }
 
   // Renderowanie Przewag (Krok 5)
@@ -1088,6 +1484,9 @@
 
     visibleEdges.forEach(edge => {
       const isChosen = currentChar.edges.some(e => e.name === edge.name);
+      const hindConflict = checkEdgeConflictWithHindrances(edge.name);
+      const isDisabled = isChosen || hindConflict.blocked;
+
       const item = document.createElement('div');
       item.style.padding = '8px';
       item.style.borderBottom = '1px solid #eee';
@@ -1095,6 +1494,13 @@
       item.style.justifyContent = 'space-between';
       item.style.alignItems = 'center';
       item.style.gap = '10px';
+      if (hindConflict.blocked && !isChosen) {
+        item.style.opacity = '0.65';
+      }
+
+      const conflictNote = (hindConflict.blocked && !isChosen)
+        ? `<div style="font-size: 0.75rem; color: #b91c1c; font-weight: 600; margin-top: 2px;">🔒 ${hindConflict.reason}</div>`
+        : '';
 
       item.innerHTML = `
         <div style="flex: 1;">
@@ -1105,9 +1511,10 @@
           </div>
           <span style="font-size: 0.75rem; color: #888;">Wymagania: ${edge.requirements || edge.req || 'Brak'}</span>
           <div style="font-size: 0.8rem; color: #444; margin-top: 2px;">${edge.desc}</div>
+          ${conflictNote}
         </div>
-        <button class="sw-btn ${isChosen ? '' : 'btn-primary'}" data-add-edge="${edge.name}" style="white-space: nowrap; font-size: 0.8rem;" ${isChosen ? 'disabled' : ''}>
-          ${isChosen ? 'Wybrano' : '+ Dodaj'}
+        <button class="sw-btn ${isDisabled ? '' : 'btn-primary'}" data-add-edge="${edge.name}" title="${hindConflict.reason || ''}" style="white-space: nowrap; font-size: 0.8rem;" ${isDisabled ? 'disabled' : ''}>
+          ${isChosen ? 'Wybrano' : (hindConflict.blocked ? '🔒 Wykluczone' : '+ Dodaj')}
         </button>
       `;
 
@@ -1543,16 +1950,120 @@
     const stats = calcDerivedStats();
     const load = calcLoad();
 
-    // Metryczka
-    document.getElementById('sheet-name').textContent = currentChar.name || 'Nowy Bohater';
-    document.getElementById('sheet-race').textContent = currentChar.raceName || 'Człowiek';
+    // Synchronizacja z polami formularza Kroku 1 (gdy użytkownik wpisał tekst w Kroku 1)
+    const inputNameEl = document.getElementById('char-name');
+    const inputConceptEl = document.getElementById('char-concept');
+    const inputGenderEl = document.getElementById('char-gender');
+    const inputAppEl = document.getElementById('char-appearance');
+
+    if (inputNameEl && inputNameEl.value.trim()) {
+      currentChar.name = inputNameEl.value.trim();
+    }
+    if (inputConceptEl && inputConceptEl.value.trim()) {
+      currentChar.concept = inputConceptEl.value.trim();
+    }
+    if (inputGenderEl && inputGenderEl.value.trim()) {
+      currentChar.gender = inputGenderEl.value.trim();
+    }
+    if (inputAppEl && inputAppEl.value.trim()) {
+      currentChar.appearance = inputAppEl.value.trim();
+    }
+
+    const barNameEl = document.getElementById('sheet-bar-char-name');
+    if (barNameEl) barNameEl.textContent = currentChar.name || 'Nowy Bohater';
+
+    // Metryczka (w trybie edycji prawdziwe pola input/textarea/select z zablokowaną szerokością)
+    const nameEl = document.getElementById('sheet-name');
+    if (nameEl) {
+      if (isSheetInlineEdit) {
+        nameEl.innerHTML = `<input type="text" id="sheet-inline-name-inp" class="sheet-inline-text-input no-print" value="${(currentChar.name || '').replace(/"/g, '&quot;')}" placeholder="Imię postaci...">`;
+        const inp = document.getElementById('sheet-inline-name-inp');
+        if (inp) {
+          inp.addEventListener('input', (e) => {
+            currentChar.name = e.target.value;
+            document.getElementById('char-name').value = currentChar.name;
+            if (barNameEl) barNameEl.textContent = currentChar.name || 'Nowy Bohater';
+          });
+        }
+      } else {
+        nameEl.textContent = currentChar.name || 'Nowy Bohater';
+      }
+    }
+
+    const sheetConceptEl = document.getElementById('sheet-concept');
+    if (sheetConceptEl) {
+      if (isSheetInlineEdit) {
+        sheetConceptEl.innerHTML = `<textarea id="sheet-inline-concept-inp" class="sheet-inline-textarea no-print" rows="2" placeholder="Koncepcja / Archetyp...">${currentChar.concept || ''}</textarea>`;
+        const inp = document.getElementById('sheet-inline-concept-inp');
+        if (inp) {
+          inp.addEventListener('input', (e) => {
+            currentChar.concept = e.target.value;
+            document.getElementById('char-concept').value = currentChar.concept;
+          });
+        }
+      } else {
+        sheetConceptEl.textContent = currentChar.concept || '—';
+      }
+    }
+
+    const raceContainer = document.getElementById('sheet-race');
+    if (raceContainer) {
+      if (isSheetInlineEdit) {
+        const allRaces = getAllRaces();
+        const raceOpts = allRaces.map(r => `<option value="${r.id}" ${r.id === currentChar.raceId ? 'selected' : ''}>${r.name}</option>`).join('');
+        raceContainer.innerHTML = `<select id="sheet-inline-race-select" class="sheet-inline-text-input no-print" style="padding: 1px 2px;">${raceOpts}</select>`;
+        const raceSel = document.getElementById('sheet-inline-race-select');
+        if (raceSel) {
+          raceSel.addEventListener('change', (e) => {
+            const newRaceId = e.target.value;
+            const rCfg = getRaceConfig(newRaceId);
+            currentChar.raceId = newRaceId;
+            currentChar.raceName = rCfg.name;
+            renderRacesSelection();
+            renderAttributesCreator();
+            updateTrackerBadges();
+            renderSheet();
+          });
+        }
+      } else {
+        raceContainer.textContent = currentChar.raceName || 'Człowiek';
+      }
+    }
+
     document.getElementById('sheet-rank').textContent = stats.rank;
     document.getElementById('sheet-bennies').textContent = stats.bennies;
-    document.getElementById('sheet-height').textContent = currentChar.appearance ? currentChar.appearance.split(',')[0] : '—';
-    document.getElementById('sheet-weight-bio').textContent = currentChar.appearance ? (currentChar.appearance.split(',')[1] || '—') : '—';
 
-    const race = getRaceConfig(currentChar.raceId);
-    document.getElementById('sheet-size').textContent = race.size !== undefined ? race.size : '0';
+    const curHeight = currentChar.appearance ? currentChar.appearance.split(',')[0].trim() : '';
+    const curWeight = currentChar.appearance ? (currentChar.appearance.split(',')[1] || '').trim() : '';
+
+    const heightEl = document.getElementById('sheet-height');
+    const weightBioEl = document.getElementById('sheet-weight-bio');
+
+    if (isSheetInlineEdit) {
+      const updateAppFromInputs = () => {
+        const hInp = document.getElementById('sheet-inline-height-inp');
+        const wInp = document.getElementById('sheet-inline-weight-inp');
+        const hVal = hInp ? hInp.value.trim() : '';
+        const wVal = wInp ? wInp.value.trim() : '';
+        currentChar.appearance = (hVal || wVal) ? `${hVal}${wVal ? ', ' + wVal : ''}` : '';
+        document.getElementById('char-appearance').value = currentChar.appearance;
+      };
+      if (heightEl) {
+        heightEl.innerHTML = `<input type="text" id="sheet-inline-height-inp" class="sheet-inline-text-input no-print" value="${curHeight.replace(/"/g, '&quot;')}" placeholder="np. 180 cm">`;
+        const hInp = document.getElementById('sheet-inline-height-inp');
+        if (hInp) hInp.addEventListener('input', updateAppFromInputs);
+      }
+      if (weightBioEl) {
+        weightBioEl.innerHTML = `<input type="text" id="sheet-inline-weight-inp" class="sheet-inline-text-input no-print" value="${curWeight.replace(/"/g, '&quot;')}" placeholder="np. 80 kg">`;
+        const wInp = document.getElementById('sheet-inline-weight-inp');
+        if (wInp) wInp.addEventListener('input', updateAppFromInputs);
+      }
+    } else {
+      if (heightEl) heightEl.textContent = curHeight || '—';
+      if (weightBioEl) weightBioEl.textContent = curWeight || '—';
+    }
+
+    document.getElementById('sheet-size').textContent = stats.size !== undefined ? stats.size : '0';
 
     // Okręgi pochodnych
     document.getElementById('sheet-parry').textContent = stats.parry;
@@ -1588,67 +2099,174 @@
       row.style.justifyContent = 'space-between';
       row.style.alignItems = 'center';
       row.style.fontSize = '0.85rem';
+      row.style.gap = '4px';
 
       let diceTrack = `
-        <div class="sheet-dice-track" style="transform: scale(0.85); transform-origin: right center;">
-          <span class="sheet-die-step ${skill.die === 'k4' ? 'active' : ''}">4</span>
-          <span class="sheet-die-step ${skill.die === 'k6' ? 'active' : ''}">6</span>
-          <span class="sheet-die-step ${skill.die === 'k8' ? 'active' : ''}">8</span>
-          <span class="sheet-die-step ${skill.die === 'k10' ? 'active' : ''}">10</span>
-          <span class="sheet-die-step ${skill.die === 'k12' ? 'active' : ''}">12</span>
+        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0;">
+          <div class="sheet-dice-track" data-sheet-skill="${skill.name}" style="transform: scale(0.85); transform-origin: right center;">
+            <span class="sheet-die-step ${skill.die === 'k4' ? 'active' : ''}" data-die="k4">4</span>
+            <span class="sheet-die-step ${skill.die === 'k6' ? 'active' : ''}" data-die="k6">6</span>
+            <span class="sheet-die-step ${skill.die === 'k8' ? 'active' : ''}" data-die="k8">8</span>
+            <span class="sheet-die-step ${skill.die === 'k10' ? 'active' : ''}" data-die="k10">10</span>
+            <span class="sheet-die-step ${skill.die === 'k12' ? 'active' : ''}" data-die="k12">12</span>
+          </div>
+          ${isSheetInlineEdit && !skill.isCore ? `<button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-skill="${skill.name}" title="Usuń umiejętność">✕</button>` : ''}
         </div>
       `;
 
       row.innerHTML = `
-        <span style="font-weight: 600;">${skill.name}</span>
+        <span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${skill.name}</span>
         ${diceTrack}
       `;
       skillsContainer.appendChild(row);
     });
 
-    // Uzupełnij puste linie umiejętności do minimum 8 pozycji
-    const blankSkillsCount = Math.max(0, 8 - learnedSkills.length);
-    for (let i = 0; i < blankSkillsCount; i++) {
-      const blankRow = document.createElement('div');
-      blankRow.className = 'sheet-blank-row';
-      blankRow.style.display = 'flex';
-      blankRow.style.justifyContent = 'space-between';
-      blankRow.style.alignItems = 'center';
-      blankRow.innerHTML = `
-        <span class="sheet-blank-dots">...................................</span>
-        <div class="sheet-dice-track" style="transform: scale(0.85); transform-origin: right center; opacity: 0.5;">
-          <span class="sheet-die-step">4</span>
-          <span class="sheet-die-step">6</span>
-          <span class="sheet-die-step">8</span>
-          <span class="sheet-die-step">10</span>
-          <span class="sheet-die-step">12</span>
-        </div>
-      `;
-      skillsContainer.appendChild(blankRow);
+    skillsContainer.querySelectorAll('.sheet-dice-track[data-sheet-skill] .sheet-die-step').forEach(stepEl => {
+      stepEl.addEventListener('click', (e) => {
+        if (!isSheetInlineEdit) return;
+        const track = e.currentTarget.closest('[data-sheet-skill]');
+        const sName = track ? track.dataset.sheetSkill : null;
+        const newDie = e.currentTarget.dataset.die;
+        if (sName && newDie) {
+          const skObj = currentChar.skills.find(s => s.name === sName);
+          if (skObj) {
+            skObj.die = newDie;
+            renderSkillsCreator();
+            updateTrackerBadges();
+            renderSheet();
+          }
+        }
+      });
+    });
+
+    skillsContainer.querySelectorAll('[data-sheet-del-skill]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const sName = e.currentTarget.dataset.sheetDelSkill;
+        const skObj = currentChar.skills.find(s => s.name === sName);
+        if (skObj) {
+          skObj.die = null;
+          renderSkillsCreator();
+          updateTrackerBadges();
+          renderSheet();
+        }
+      });
+    });
+
+    if (isSheetInlineEdit) {
+      const unlearnedSkills = currentChar.skills.filter(s => !s.die);
+      if (unlearnedSkills.length > 0) {
+        const addSkillRow = document.createElement('div');
+        addSkillRow.className = 'sheet-inline-add-bar no-print';
+        const opts = unlearnedSkills.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        addSkillRow.innerHTML = `
+          <select id="sheet-inline-add-skill-sel" class="sheet-inline-select">${opts}</select>
+          <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-skill" style="padding: 3px 7px; font-size: 0.72rem; flex-shrink: 0;">+ Dodaj</button>
+        `;
+        skillsContainer.appendChild(addSkillRow);
+        const addBtn = addSkillRow.querySelector('#btn-sheet-inline-add-skill');
+        const selEl = addSkillRow.querySelector('#sheet-inline-add-skill-sel');
+        if (addBtn && selEl) {
+          addBtn.addEventListener('click', () => {
+            const sk = currentChar.skills.find(s => s.name === selEl.value);
+            if (sk) {
+              sk.die = 'k4';
+              renderSkillsCreator();
+              updateTrackerBadges();
+              renderSheet();
+            }
+          });
+        }
+      }
+    } else {
+      const blankSkillsCount = Math.max(0, 8 - learnedSkills.length);
+      for (let i = 0; i < blankSkillsCount; i++) {
+        const blankRow = document.createElement('div');
+        blankRow.className = 'sheet-blank-row';
+        blankRow.style.display = 'flex';
+        blankRow.style.justifyContent = 'space-between';
+        blankRow.style.alignItems = 'center';
+        blankRow.innerHTML = `
+          <span class="sheet-blank-dots">...................................</span>
+          <div class="sheet-dice-track" style="transform: scale(0.85); transform-origin: right center; opacity: 0.5;">
+            <span class="sheet-die-step">4</span>
+            <span class="sheet-die-step">6</span>
+            <span class="sheet-die-step">8</span>
+            <span class="sheet-die-step">10</span>
+            <span class="sheet-die-step">12</span>
+          </div>
+        `;
+        skillsContainer.appendChild(blankRow);
+      }
     }
 
     // Sprzęt na karcie
     const gearList = document.getElementById('sheet-gear-rendered-list');
     gearList.innerHTML = '';
-    const allGear = [
-      ...currentChar.weapons.map(w => `${w.name} (${w.weight || 0} kg)`),
-      ...currentChar.armorItems.map(a => `${a.name} (${a.weight || 0} kg)`),
-      ...currentChar.gear.map(g => `${g.name} (${g.weight || 0} kg)`)
+    const gearEntries = [
+      ...currentChar.weapons.map((w, idx) => ({ label: `${w.name} (${w.weight || 0} kg)`, type: 'weapons', idx })),
+      ...currentChar.armorItems.map((a, idx) => ({ label: `${a.name} (${a.weight || 0} kg)`, type: 'armorItems', idx })),
+      ...currentChar.gear.map((g, idx) => ({ label: `${g.name} (${g.weight || 0} kg)`, type: 'gear', idx }))
     ];
 
-    allGear.forEach(itemStr => {
+    gearEntries.forEach(entry => {
       const li = document.createElement('li');
-      li.textContent = itemStr;
+      if (isSheetInlineEdit) {
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.gap = '4px';
+        li.style.marginBottom = '3px';
+        li.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis;">• ${entry.label}</span> <button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-equip-type="${entry.type}" data-sheet-del-equip-idx="${entry.idx}" title="Usuń przedmiot">✕</button>`;
+      } else {
+        li.textContent = entry.label;
+      }
       gearList.appendChild(li);
     });
 
-    // Uzupełnij puste linie sprzętu do minimum 6 pozycji
-    const blankGearCount = Math.max(0, 6 - allGear.length);
-    for (let i = 0; i < blankGearCount; i++) {
-      const li = document.createElement('li');
-      li.style.color = '#bbb';
-      li.textContent = '................................................';
-      gearList.appendChild(li);
+    gearList.querySelectorAll('[data-sheet-del-equip-type]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const t = e.currentTarget.dataset.sheetDelEquipType;
+        const i = parseInt(e.currentTarget.dataset.sheetDelEquipIdx, 10);
+        if (currentChar[t] && currentChar[t][i] !== undefined) {
+          currentChar[t].splice(i, 1);
+          renderEquipment();
+          updateTrackerBadges();
+          renderSheet();
+        }
+      });
+    });
+
+    if (isSheetInlineEdit) {
+      const addGearLi = document.createElement('li');
+      addGearLi.className = 'sheet-inline-add-bar no-print';
+      addGearLi.style.listStyle = 'none';
+      addGearLi.innerHTML = `
+        <input type="text" id="sheet-inline-gear-name" class="sheet-inline-select" placeholder="Przedmiot...">
+        <input type="number" id="sheet-inline-gear-weight" class="sheet-inline-select" placeholder="kg" value="1" style="flex: 0 0 42px; width: 42px;">
+        <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-gear" style="padding: 3px 7px; font-size: 0.72rem; flex-shrink: 0;">+ Dodaj</button>
+      `;
+      gearList.appendChild(addGearLi);
+      const btnAddGear = addGearLi.querySelector('#btn-sheet-inline-add-gear');
+      if (btnAddGear) {
+        btnAddGear.addEventListener('click', () => {
+          const nm = addGearLi.querySelector('#sheet-inline-gear-name').value.trim();
+          const wg = parseFloat(addGearLi.querySelector('#sheet-inline-gear-weight').value) || 0;
+          if (nm) {
+            currentChar.gear.push({ name: nm, weight: wg, cost: 0, notes: '' });
+            renderEquipment();
+            updateTrackerBadges();
+            renderSheet();
+          }
+        });
+      }
+    } else {
+      const blankGearCount = Math.max(0, 6 - gearEntries.length);
+      for (let i = 0; i < blankGearCount; i++) {
+        const li = document.createElement('li');
+        li.style.color = '#bbb';
+        li.textContent = '................................................';
+        gearList.appendChild(li);
+      }
     }
 
     document.getElementById('sheet-current-load').textContent = `${load.current} kg`;
@@ -1657,43 +2275,156 @@
     // Zawady na karcie
     const hindrancesContainer = document.getElementById('sheet-hindrances-rendered-list');
     hindrancesContainer.innerHTML = '';
-    if (currentChar.hindrances.length === 0) {
+    if (currentChar.hindrances.length === 0 && !isSheetInlineEdit) {
       hindrancesContainer.innerHTML = `
         <div style="color: #666;"><em>Brak Zawad</em></div>
         <div style="color: #bbb;">....................................................................</div>
         <div style="color: #bbb;">....................................................................</div>
       `;
     } else {
-      currentChar.hindrances.forEach(h => {
+      currentChar.hindrances.forEach((h, idx) => {
         const item = document.createElement('div');
-        item.innerHTML = `<strong>${h.name}</strong> (${h.severity}) - <span style="color:#555;">${h.desc}</span>`;
+        const noteStr = h.customNote ? ` <em>[${h.customNote}]</em>` : '';
+        if (isSheetInlineEdit) {
+          item.style.display = 'flex';
+          item.style.justifyContent = 'space-between';
+          item.style.alignItems = 'flex-start';
+          item.style.gap = '6px';
+          item.innerHTML = `
+            <div style="min-width:0; flex:1;"><strong>${h.name}</strong>${noteStr} (${h.severity}) - <span style="color:#555;">${h.desc}</span></div>
+            <button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-hind="${idx}" title="Usuń Zawadę">✕</button>
+          `;
+        } else {
+          item.innerHTML = `<strong>${h.name}</strong>${noteStr} (${h.severity}) - <span style="color:#555;">${h.desc}</span>`;
+        }
         hindrancesContainer.appendChild(item);
       });
+
+      hindrancesContainer.querySelectorAll('[data-sheet-del-hind]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.sheetDelHind, 10);
+          currentChar.hindrances.splice(idx, 1);
+          clampHindranceSpend();
+          renderHindrances();
+          updateTrackerBadges();
+          renderSheet();
+        });
+      });
+
+      if (isSheetInlineEdit) {
+        const allH = getAllHindrances().filter(h => !currentChar.hindrances.some(ch => ch.name === h.name));
+        if (allH.length > 0) {
+          const addHindRow = document.createElement('div');
+          addHindRow.className = 'sheet-inline-add-bar no-print';
+          const opts = allH.map(h => `<option value="${h.name}">${h.name} (${h.severity || h.type})</option>`).join('');
+          addHindRow.innerHTML = `
+            <select id="sheet-inline-add-hind-sel" class="sheet-inline-select">${opts}</select>
+            <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-hind" style="padding: 3px 7px; font-size: 0.72rem; flex-shrink: 0;">+ Dodaj</button>
+          `;
+          hindrancesContainer.appendChild(addHindRow);
+          const btnAddH = addHindRow.querySelector('#btn-sheet-inline-add-hind');
+          const selH = addHindRow.querySelector('#sheet-inline-add-hind-sel');
+          if (btnAddH && selH) {
+            btnAddH.addEventListener('click', () => {
+              const hObj = allH.find(x => x.name === selH.value);
+              if (hObj) {
+                const mode = getHindranceMode(hObj);
+                const sev = mode === 'powazna' ? 'Poważna' : 'Drobna';
+                const pts = sev === 'Poważna' ? 2 : 1;
+                currentChar.hindrances.push({
+                  name: hObj.name,
+                  severity: sev,
+                  points: pts,
+                  desc: hObj.desc,
+                  customNote: '',
+                  source: hObj.source || 'swep'
+                });
+                renderHindrances();
+                updateTrackerBadges();
+                renderSheet();
+              }
+            });
+          }
+        }
+      }
     }
 
     // Przewagi na karcie
     const edgesContainer = document.getElementById('sheet-edges-rendered-list');
     edgesContainer.innerHTML = '';
-    if (currentChar.edges.length === 0) {
+    if (currentChar.edges.length === 0 && !isSheetInlineEdit) {
       edgesContainer.innerHTML = `
         <div style="color: #666;"><em>Brak Przewag</em></div>
         <div style="color: #bbb;">N: ................................................................</div>
         <div style="color: #bbb;">N: ................................................................</div>
       `;
     } else {
-      currentChar.edges.forEach(e => {
+      currentChar.edges.forEach((e, idx) => {
         const item = document.createElement('div');
-        item.innerHTML = `<strong>${e.name}</strong> - <span style="color:#555;">${e.desc}</span>`;
+        if (isSheetInlineEdit) {
+          item.style.display = 'flex';
+          item.style.justifyContent = 'space-between';
+          item.style.alignItems = 'flex-start';
+          item.style.gap = '6px';
+          item.innerHTML = `
+            <div style="min-width:0; flex:1;"><strong>${e.name}</strong> - <span style="color:#555;">${e.desc}</span></div>
+            <button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-edge="${idx}" title="Usuń Przewagę">✕</button>
+          `;
+        } else {
+          item.innerHTML = `<strong>${e.name}</strong> - <span style="color:#555;">${e.desc}</span>`;
+        }
         edgesContainer.appendChild(item);
       });
+
+      edgesContainer.querySelectorAll('[data-sheet-del-edge]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.sheetDelEdge, 10);
+          currentChar.edges.splice(idx, 1);
+          renderEdges();
+          updateTrackerBadges();
+          renderSheet();
+        });
+      });
+
+      if (isSheetInlineEdit) {
+        const allE = getAllEdges().filter(e => !currentChar.edges.some(ce => ce.name === e.name));
+        if (allE.length > 0) {
+          const addEdgeRow = document.createElement('div');
+          addEdgeRow.className = 'sheet-inline-add-bar no-print';
+          const opts = allE.map(e => `<option value="${e.name}">${e.name} [${e.category || e.type}]</option>`).join('');
+          addEdgeRow.innerHTML = `
+            <select id="sheet-inline-add-edge-sel" class="sheet-inline-select">${opts}</select>
+            <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-edge" style="padding: 3px 7px; font-size: 0.72rem; flex-shrink: 0;">+ Dodaj</button>
+          `;
+          edgesContainer.appendChild(addEdgeRow);
+          const btnAddE = addEdgeRow.querySelector('#btn-sheet-inline-add-edge');
+          const selE = addEdgeRow.querySelector('#sheet-inline-add-edge-sel');
+          if (btnAddE && selE) {
+            btnAddE.addEventListener('click', () => {
+              const eObj = allE.find(x => x.name === selE.value);
+              if (eObj) {
+                currentChar.edges.push(eObj);
+                if (eObj.isArcaneBackground || eObj.name.includes('Zdolności nadprzyrodzone') || eObj.name.includes('Pochodzenie Niesamowite')) {
+                  ensureArcaneSkill(eObj.name);
+                }
+                renderEdges();
+                renderPowers();
+                updateTrackerBadges();
+                renderSheet();
+              }
+            });
+          }
+        }
+      }
     }
 
     // Tabela broni na karcie
     const weaponsTbody = document.getElementById('sheet-weapons-tbody');
     weaponsTbody.innerHTML = '';
     const weaponsList = currentChar.weapons || [];
-    weaponsList.forEach(w => {
+    weaponsList.forEach((w, idx) => {
       const tr = document.createElement('tr');
+      const delBtn = isSheetInlineEdit ? `<button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-weapon="${idx}" title="Usuń broń" style="margin-left: 6px;">✕</button>` : '';
       tr.innerHTML = `
         <td><strong>${w.name}</strong></td>
         <td>${w.range || 'Wręcz'}</td>
@@ -1701,46 +2432,124 @@
         <td>${w.ap !== undefined ? w.ap : '—'}</td>
         <td>${w.rof || 1}</td>
         <td>${w.weight || 1} kg</td>
-        <td>${w.notes || '—'}</td>
+        <td><div style="display:flex; justify-content:space-between; align-items:center;"><span>${w.notes || '—'}</span>${delBtn}</div></td>
       `;
       weaponsTbody.appendChild(tr);
     });
 
-    // Uzupełnij puste linie broni do minimum 3 pozycji
-    const blankWeaponsCount = Math.max(0, 3 - weaponsList.length);
-    for (let i = 0; i < blankWeaponsCount; i++) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td style="color:#aaa;">...................</td>
-        <td style="color:#aaa;">.......</td>
-        <td style="color:#aaa;">.......</td>
-        <td style="color:#aaa;">....</td>
-        <td style="color:#aaa;">....</td>
-        <td style="color:#aaa;">....</td>
-        <td style="color:#aaa;">...................</td>
+    weaponsTbody.querySelectorAll('[data-sheet-del-weapon]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.currentTarget.dataset.sheetDelWeapon, 10);
+        currentChar.weapons.splice(idx, 1);
+        renderEquipment();
+        updateTrackerBadges();
+        renderSheet();
+      });
+    });
+
+    if (isSheetInlineEdit) {
+      const allWeaps = [...getAllEquipment('weapons_melee'), ...getAllEquipment('weapons_ranged')];
+      const addWTr = document.createElement('tr');
+      addWTr.className = 'no-print';
+      const wOpts = allWeaps.map((w, i) => `<option value="${i}">${w.name} (${w.damage || 'Si'}, Zas: ${w.range || 'Wręcz'})</option>`).join('');
+      addWTr.innerHTML = `
+        <td colspan="7">
+          <div class="sheet-inline-add-bar" style="margin-top:0; padding-top:2px; border-top:none;">
+            <select id="sheet-inline-add-weap-sel" class="sheet-inline-select">${wOpts}</select>
+            <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-weap" style="padding: 3px 8px; font-size: 0.75rem; flex-shrink: 0;">+ Dodaj broń</button>
+          </div>
+        </td>
       `;
-      weaponsTbody.appendChild(tr);
+      weaponsTbody.appendChild(addWTr);
+      const btnAddW = addWTr.querySelector('#btn-sheet-inline-add-weap');
+      const selW = addWTr.querySelector('#sheet-inline-add-weap-sel');
+      if (btnAddW && selW) {
+        btnAddW.addEventListener('click', () => {
+          const wObj = allWeaps[parseInt(selW.value, 10)];
+          if (wObj) {
+            currentChar.weapons.push({ ...wObj });
+            renderEquipment();
+            updateTrackerBadges();
+            renderSheet();
+          }
+        });
+      }
+    } else {
+      const blankWeaponsCount = Math.max(0, 3 - weaponsList.length);
+      for (let i = 0; i < blankWeaponsCount; i++) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:#aaa;">...................</td>
+          <td style="color:#aaa;">.......</td>
+          <td style="color:#aaa;">.......</td>
+          <td style="color:#aaa;">....</td>
+          <td style="color:#aaa;">....</td>
+          <td style="color:#aaa;">....</td>
+          <td style="color:#aaa;">...................</td>
+        `;
+        weaponsTbody.appendChild(tr);
+      }
     }
 
     // Tabela mocy na karcie
     const powersContainer = document.getElementById('sheet-powers-container');
     const powersTbody = document.getElementById('sheet-powers-tbody');
-    if (currentChar.powers.length === 0) {
+    if (currentChar.powers.length === 0 && (!isSheetInlineEdit || !hasArcaneBackground())) {
       powersContainer.style.display = 'none';
     } else {
       powersContainer.style.display = 'block';
       powersTbody.innerHTML = '';
-      currentChar.powers.forEach(p => {
+      currentChar.powers.forEach((p, idx) => {
         const tr = document.createElement('tr');
+        const delBtn = isSheetInlineEdit ? `<button type="button" class="sheet-inline-del-btn no-print" data-sheet-del-power="${idx}" title="Usuń Moc" style="margin-left: 6px;">✕</button>` : '';
         tr.innerHTML = `
           <td><strong>${p.name}</strong></td>
-          <td>${p.pm || 1}</td>
+          <td>${p.pm || p.pp || 1}</td>
           <td>${p.range || 'Sp'}</td>
           <td>${p.duration || '5 rund'}</td>
-          <td>${p.desc}</td>
+          <td><div style="display:flex; justify-content:space-between; align-items:center;"><span>${p.desc}</span>${delBtn}</div></td>
         `;
         powersTbody.appendChild(tr);
       });
+
+      powersTbody.querySelectorAll('[data-sheet-del-power]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.dataset.sheetDelPower, 10);
+          currentChar.powers.splice(idx, 1);
+          renderPowers();
+          renderSheet();
+        });
+      });
+
+      if (isSheetInlineEdit) {
+        const allP = getAllPowers().filter(p => !currentChar.powers.some(cp => cp.name === p.name));
+        if (allP.length > 0) {
+          const addPTr = document.createElement('tr');
+          addPTr.className = 'no-print';
+          const pOpts = allP.map(p => `<option value="${p.name}">${p.name} (PM: ${p.pm || p.pp || 1})</option>`).join('');
+          addPTr.innerHTML = `
+            <td colspan="5">
+              <div class="sheet-inline-add-bar" style="margin-top:0; padding-top:2px; border-top:none;">
+                <select id="sheet-inline-add-power-sel" class="sheet-inline-select">${pOpts}</select>
+                <button type="button" class="sw-btn btn-sm btn-primary" id="btn-sheet-inline-add-power" style="padding: 3px 8px; font-size: 0.75rem; flex-shrink: 0;">+ Dodaj moc</button>
+              </div>
+            </td>
+          `;
+          powersTbody.appendChild(addPTr);
+          const btnAddP = addPTr.querySelector('#btn-sheet-inline-add-power');
+          const selP = addPTr.querySelector('#sheet-inline-add-power-sel');
+          if (btnAddP && selP) {
+            btnAddP.addEventListener('click', () => {
+              const pObj = allP.find(x => x.name === selP.value);
+              if (pObj) {
+                currentChar.powers.push({ ...pObj });
+                renderPowers();
+                renderSheet();
+              }
+            });
+          }
+        }
+      }
     }
 
     // Notatki na karcie (Strona 2)
@@ -1998,6 +2807,8 @@
     // Odczyt aktualnych wartości z pól formularza
     currentChar.name = document.getElementById('char-name').value || currentChar.name || 'Nowy Bohater';
     currentChar.concept = document.getElementById('char-concept').value || currentChar.concept;
+    const genderEl = document.getElementById('char-gender');
+    if (genderEl) currentChar.gender = genderEl.value || currentChar.gender;
     currentChar.appearance = document.getElementById('char-appearance').value || currentChar.appearance;
     currentChar.notes = document.getElementById('char-notes-area').value || currentChar.notes;
     const sNotesEl = document.getElementById('char-sanity-notes');
@@ -2104,8 +2915,8 @@
                          (charData.raceId && typeof FANTASY_DATA !== 'undefined' && FANTASY_DATA.races.some(r => r.id === charData.raceId));
       appState.activeModules = {
         swep: true,
-        horror: !!hasHorror,
-        fantasy: !!hasFantasy
+        horror: !!(appState.activeModules.horror || hasHorror),
+        fantasy: !!(appState.activeModules.fantasy || hasFantasy)
       };
     }
     currentChar.activeModules = { ...appState.activeModules };
@@ -2113,6 +2924,8 @@
     // Ustawienie wartości w polach formularza
     document.getElementById('char-name').value = currentChar.name || '';
     document.getElementById('char-concept').value = currentChar.concept || '';
+    const charGenderInput = document.getElementById('char-gender');
+    if (charGenderInput) charGenderInput.value = currentChar.gender || '';
     document.getElementById('char-appearance').value = currentChar.appearance || '';
     document.getElementById('char-notes-area').value = currentChar.notes || '';
     const sNotesField = document.getElementById('char-sanity-notes');
@@ -2151,9 +2964,10 @@
           <div style="font-size: 0.75rem; color: #888;">Zapisano: ${dateStr}</div>
         </div>
         <div class="saved-char-actions">
-          <button class="sw-btn btn-primary" data-load-char="${char.id}">Otwórz</button>
-          <button class="sw-btn" data-export-char="${char.id}">JSON</button>
-          <button class="sw-btn" data-delete-char="${char.id}" style="color: #9e1b1b;">Usuń</button>
+          <button class="sw-btn btn-primary" data-load-char="${char.id}" title="Otwórz Kartę Postaci">📜 Karta</button>
+          <button class="sw-btn" data-edit-wizard-char="${char.id}" title="Wczytaj postać do edycji w Kreatorze">✏️ Edytuj</button>
+          <button class="sw-btn" data-export-char="${char.id}" title="Pobierz plik JSON">JSON</button>
+          <button class="sw-btn" data-delete-char="${char.id}" style="color: #9e1b1b;" title="Usuń postać">Usuń</button>
         </div>
       `;
 
@@ -2168,6 +2982,32 @@
           loadCharacterFromObject(JSON.parse(JSON.stringify(target)));
           document.getElementById('modal-char-manager').classList.remove('active');
           switchView('view-sheet');
+        }
+      });
+    });
+
+    container.querySelectorAll('[data-edit-wizard-char]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.editWizardChar;
+        const target = list.find(c => c.id === id);
+        if (target) {
+          loadCharacterFromObject(JSON.parse(JSON.stringify(target)));
+          document.getElementById('modal-char-manager').classList.remove('active');
+          switchView('view-wizard');
+          switchWizardStep(1);
+        }
+      });
+    });
+
+    container.querySelectorAll('[data-edit-inline-char]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.editInlineChar;
+        const target = list.find(c => c.id === id);
+        if (target) {
+          loadCharacterFromObject(JSON.parse(JSON.stringify(target)));
+          document.getElementById('modal-char-manager').classList.remove('active');
+          switchView('view-sheet');
+          setSheetInlineEditMode(true);
         }
       });
     });
@@ -2225,6 +3065,40 @@
   // ==========================================================================
   // NAWIGACJA WIDOKAMI I KROKAMI KREATORA
   // ==========================================================================
+
+  function setSheetInlineEditMode(enabled) {
+    isSheetInlineEdit = !!enabled;
+    const viewSheet = document.getElementById('view-sheet');
+    const topBar = document.getElementById('sheet-top-bar');
+    const drawer = document.getElementById('sheet-edit-drawer');
+    const toggleBtn = document.getElementById('btn-toggle-sheet-edit');
+    const statusPill = document.getElementById('sheet-edit-status-pill');
+    const subText = document.getElementById('sheet-edit-subtext');
+
+    if (viewSheet) {
+      viewSheet.classList.toggle('sheet-edit-active', isSheetInlineEdit);
+    }
+    if (topBar) {
+      topBar.classList.toggle('is-editing', isSheetInlineEdit);
+    }
+    if (drawer) {
+      drawer.style.display = isSheetInlineEdit ? 'flex' : 'none';
+    }
+    if (toggleBtn) {
+      toggleBtn.innerHTML = isSheetInlineEdit
+        ? '<span>✅</span> Zakończ edycję'
+        : '<span>✏️</span> Tryb edycji';
+    }
+    if (statusPill) {
+      statusPill.textContent = isSheetInlineEdit ? 'Edycja aktywna' : 'Podgląd';
+    }
+    if (subText) {
+      subText.textContent = isSheetInlineEdit
+        ? 'Kliknij w Imię, Koncepcję, Wzrost, Wagę lub w kości (4–12) na arkuszu, albo wybierz poniżej sekcję do edycji w Kreatorze.'
+        : 'Kliknij „Tryb edycji”, aby edytować pola i kości na arkuszu lub przejść do wybranej sekcji Kreatora.';
+    }
+    renderSheet();
+  }
 
   function switchView(viewId) {
     document.querySelectorAll('.sw-view').forEach(v => v.classList.remove('active'));
@@ -2504,6 +3378,10 @@
 
     // Filtry
     document.getElementById('filter-hindrances').addEventListener('input', renderHindrances);
+    const sevFilterEl = document.getElementById('filter-hindrances-severity');
+    if (sevFilterEl) sevFilterEl.addEventListener('change', renderHindrances);
+    const extraHindToggle = document.getElementById('chk-allow-extra-hindrances');
+    if (extraHindToggle) extraHindToggle.addEventListener('change', renderHindrances);
     document.getElementById('filter-edges-text').addEventListener('input', renderEdges);
     document.getElementById('filter-edges-category').addEventListener('change', renderEdges);
     document.getElementById('filter-powers-text').addEventListener('input', renderPowers);
@@ -3143,25 +4021,172 @@
       });
     }
 
-    // Aktualizacja pól tekstu
+    // Aktualizacja pól tekstu (Krok 1 <-> Finalna Karta Postaci)
     document.getElementById('char-name').addEventListener('input', (e) => {
       currentChar.name = e.target.value;
-      document.getElementById('sheet-name').textContent = currentChar.name || 'Nowy Bohater';
+      const shName = document.getElementById('sheet-name');
+      if (shName) {
+        if (shName.tagName === 'INPUT') shName.value = currentChar.name;
+        else shName.textContent = currentChar.name || 'Nowy Bohater';
+      }
     });
 
     document.getElementById('char-concept').addEventListener('input', (e) => {
       currentChar.concept = e.target.value;
+      const shConcept = document.getElementById('sheet-concept');
+      if (shConcept) shConcept.textContent = currentChar.concept || '—';
     });
+
+    const charGenderEl = document.getElementById('char-gender');
+    if (charGenderEl) {
+      charGenderEl.addEventListener('input', (e) => {
+        currentChar.gender = e.target.value;
+        const shGender = document.getElementById('sheet-gender');
+        if (shGender && shGender.tagName === 'INPUT') shGender.value = currentChar.gender;
+      });
+    }
 
     document.getElementById('char-appearance').addEventListener('input', (e) => {
       currentChar.appearance = e.target.value;
+      const shApp = document.getElementById('sheet-appearance');
+      if (shApp && shApp.tagName === 'INPUT') shApp.value = currentChar.appearance;
     });
+
+    // Edycja bezpośrednio na Finalnej Karcie Postaci
+    const shNameInput = document.getElementById('sheet-name');
+    if (shNameInput && shNameInput.tagName === 'INPUT') {
+      shNameInput.addEventListener('input', (e) => {
+        currentChar.name = e.target.value;
+        document.getElementById('char-name').value = currentChar.name;
+      });
+    }
+    const shConceptInput = document.getElementById('sheet-concept');
+    if (shConceptInput && shConceptInput.tagName === 'INPUT') {
+      shConceptInput.addEventListener('input', (e) => {
+        currentChar.concept = e.target.value;
+        document.getElementById('char-concept').value = currentChar.concept;
+      });
+    }
+    const shGenderInput = document.getElementById('sheet-gender');
+    if (shGenderInput && shGenderInput.tagName === 'INPUT') {
+      shGenderInput.addEventListener('input', (e) => {
+        currentChar.gender = e.target.value;
+        if (charGenderEl) charGenderEl.value = currentChar.gender;
+      });
+    }
+    const shAppInput = document.getElementById('sheet-appearance');
+    if (shAppInput && shAppInput.tagName === 'INPUT') {
+      shAppInput.addEventListener('input', (e) => {
+        currentChar.appearance = e.target.value;
+        document.getElementById('char-appearance').value = currentChar.appearance;
+      });
+    }
 
     document.getElementById('char-notes-area').addEventListener('input', (e) => {
       currentChar.notes = e.target.value;
       const notesPrint = document.getElementById('notes-print-display');
       if (notesPrint) notesPrint.textContent = e.target.value;
     });
+
+    // Obsługa paska edycji na Karcie Postaci (#view-sheet)
+    const btnToggleSheetEdit = document.getElementById('btn-toggle-sheet-edit');
+    if (btnToggleSheetEdit) {
+      btnToggleSheetEdit.addEventListener('click', () => {
+        setSheetInlineEditMode(!isSheetInlineEdit);
+      });
+    }
+
+    const btnSheetToWizard = document.getElementById('btn-sheet-to-wizard');
+    if (btnSheetToWizard) {
+      btnSheetToWizard.addEventListener('click', () => {
+        switchView('view-wizard');
+        switchWizardStep(1);
+      });
+    }
+
+    const btnSheetQuickSave = document.getElementById('btn-sheet-quick-save');
+    if (btnSheetQuickSave) {
+      btnSheetQuickSave.addEventListener('click', () => {
+        saveCurrentCharacter();
+      });
+    }
+
+    const btnSheetSaveCopy = document.getElementById('btn-sheet-save-copy');
+    if (btnSheetSaveCopy) {
+      btnSheetSaveCopy.addEventListener('click', () => {
+        currentChar.id = 'char_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        if (!currentChar.name.endsWith(' (Kopia)')) {
+          currentChar.name = (currentChar.name || 'Bohater') + ' (Kopia)';
+          document.getElementById('char-name').value = currentChar.name;
+        }
+        saveCurrentCharacter();
+      });
+    }
+
+    document.querySelectorAll('[data-sheet-goto-step]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const step = parseInt(e.currentTarget.dataset.sheetGotoStep, 10);
+        switchView('view-wizard');
+        switchWizardStep(step || 1);
+      });
+    });
+
+    // Bezpośrednia edycja kości Atrybutów na Karcie Postaci w trybie edycji
+    document.querySelectorAll('.sheet-attr-box .sheet-dice-track .sheet-die-step').forEach(stepEl => {
+      stepEl.addEventListener('click', (e) => {
+        if (!isSheetInlineEdit) return;
+        const track = e.currentTarget.closest('.sheet-dice-track');
+        const attrKey = track ? track.dataset.attr : null;
+        const newDie = e.currentTarget.dataset.die;
+        if (attrKey && newDie) {
+          currentChar.attributes[attrKey] = newDie;
+          renderAttributesCreator();
+          renderSkillsCreator();
+          updateTrackerBadges();
+          renderSheet();
+        }
+      });
+    });
+
+    // Bezpośrednia edycja pól metryczki (contenteditable) na Karcie Postaci
+    const sheetNameSpan = document.getElementById('sheet-name');
+    if (sheetNameSpan) {
+      sheetNameSpan.addEventListener('blur', () => {
+        if (!isSheetInlineEdit) return;
+        const val = sheetNameSpan.textContent.trim();
+        currentChar.name = val || 'Nowy Bohater';
+        document.getElementById('char-name').value = currentChar.name;
+        const toolbarNameEl = document.getElementById('sheet-toolbar-char-name');
+        if (toolbarNameEl) toolbarNameEl.textContent = currentChar.name;
+      });
+    }
+
+    const sheetConceptSpan = document.getElementById('sheet-concept');
+    if (sheetConceptSpan) {
+      sheetConceptSpan.addEventListener('blur', () => {
+        if (!isSheetInlineEdit) return;
+        const val = sheetConceptSpan.textContent.trim();
+        currentChar.concept = (val === '—') ? '' : val;
+        document.getElementById('char-concept').value = currentChar.concept;
+      });
+    }
+
+    const syncAppearanceFromSheet = () => {
+      if (!isSheetInlineEdit) return;
+      const hEl = document.getElementById('sheet-height');
+      const wEl = document.getElementById('sheet-weight-bio');
+      const hVal = hEl ? hEl.textContent.trim() : '';
+      const wVal = wEl ? wEl.textContent.trim() : '';
+      const cleanH = (hVal === '—') ? '' : hVal;
+      const cleanW = (wVal === '—') ? '' : wVal;
+      currentChar.appearance = [cleanH, cleanW].filter(Boolean).join(', ');
+      document.getElementById('char-appearance').value = currentChar.appearance;
+    };
+
+    const sheetHeightSpan = document.getElementById('sheet-height');
+    if (sheetHeightSpan) sheetHeightSpan.addEventListener('blur', syncAppearanceFromSheet);
+    const sheetWeightSpan = document.getElementById('sheet-weight-bio');
+    if (sheetWeightSpan) sheetWeightSpan.addEventListener('blur', syncAppearanceFromSheet);
   }
 
   // --- START APLIKACJI ---

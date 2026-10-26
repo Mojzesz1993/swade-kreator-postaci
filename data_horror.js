@@ -283,99 +283,131 @@ const HORROR_DATA = {
   "hindrances": [
     {
       "name": "Kochliwy",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Bohater łatwo ulega urokowi pięknych osób. Otrzymuje karę -2 do przeciwstawiania się testom i sztuczkom postaci z Przewagą Atrakcyjny lub Bardzo atrakcyjny."
+      "desc": "Bohater łatwo ulega urokowi pięknych osób. Otrzymuje karę −2 do przeciwstawiania się testom postaci z Przewagą Atrakcyjny lub Bardzo atrakcyjny."
     },
     {
       "name": "Krwotok",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
       "desc": "Rany postaci krwawią obficie. Gdy bohater odniesie Ranę, musi zdawać test Wigoru co rundę; porażka oznacza otrzymanie poziomu Zmęczenia z upływu krwi aż do opatrzenia (Leczenie)."
     },
     {
       "name": "Magnes na kule",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Pociski i odłamki zdają się szukać tego nieszczęśnika. W przypadku chybienia celu w walce zasięgowej w zasięgu walki, zbłąkane pociski zawsze trafiają w tę postać."
+      "desc": "Pociski i odłamki zdają się szukać tego nieszczęśnika. Kara za Trafienie Niewinnego Bystronia wynosi −1 przy strzelaniu i −2 przy ogniu ciągłym/strzelbach."
     },
     {
       "name": "Prześladowca / Tyran",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "horror",
-      "desc": "Postać wyżywa się na słabszych i bezbronnych. Jako Mniejsza: budzi antypatię (-1 do Przekonywania). Jako Większa: bezlitosny sadysta, -2 do Przekonywania i ryzyko zemsty ofiar."
+      "desc": "Postać wyżywa się na słabszych i bezbronnych. Drobna: budzi antypatię (−1 do Przekonywania). Poważna: bezlitosny sadysta, −2 do Przekonywania i ryzyko zemsty ofiar."
     },
     {
       "name": "Splugawienie",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Wymaga Pochodzenia Niesamowitego. Magia bohatera czerpie z mrocznego, plugawego źródła. Krytyczna porażka w teście magii dodaje nową Mniejszą Zawadę (lub zwiększa posiadaną do Większej) odzwierciedlającą spaczenie umysłu i ciała."
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Magia bohatera czerpie z mrocznego źródła. Krytyczna porażka w teście magii dodaje nową Drobną Zawadę (lub zwiększa posiadaną do Poważnej) do końca sesji."
     },
     {
       "name": "Przeklęty",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Czarodzieje i sojusznicy rzucający korzystną magię na przeklętego bohatera odejmują 2 od swoich testów umiejętności niesamowitej. Klątwa odpycha pomoc."
+      "desc": "Czarodzieje i sojusznicy rzucający korzystną magię na przeklętego bohatera odejmują 2 od swoich testów umiejętności nadprzyrodzonej."
     },
     {
       "name": "Przeznaczony na zgubę",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Cień śmierci wisi nad bohaterem. Odejmuje 2 od wszystkich testów Przyjmowania Ran (Soak rolls) za Fuks."
+      "desc": "Cień śmierci wisi nad bohaterem. Odejmuje 2 od wszystkich testów Wyparowania (Soak rolls)."
     },
     {
       "name": "Trwoga",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Bohater panicznie boi się mroku, samotności lub potworów. Odejmuje 1 od testów Strachu i testów przeciw Zastraszaniu."
+      "desc": "Bohater panicznie boi się mroku i potworów. Gdy poziom Strachu na obszarze rośnie, dla tej postaci jest on o 1 wyższy."
     },
     {
       "name": "Ciężki sen",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Gdy zaśnie, trudno go dobudzić nawet w obliczu śmiertelnego niebezpieczeństwa. Kara -4 do testów Spostrzegawczości podczas snu, a po obudzeniu w szoku jest Wstrząśnięty."
+      "desc": "Gdy zaśnie, trudno go dobudzić nawet w obliczu niebezpieczeństwa. Kara −4 do testów Spostrzegawczości podczas snu."
     },
     {
       "name": "Nerwowy / Płochliwy",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
       "desc": "Każdy szelest sprawia, że skacze ze strachu. Odejmuje 2 od testów Strachu wywołanych nagłymi zdarzeniami i zasadzkami."
     },
     {
       "name": "Komponenty materialne",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Wymaga Pochodzenia Niesamowitego. Rzucanie zaklęć wymaga rzadkich proszków, ziół, świec i kości. Krytyczna porażka w teście magii niszczy zapas komponentów: -4 do czarowania do czasu uzupełnienia."
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Bez komponentów −4 do testów mocy. Krytyczna porażka w teście magii niszczy zapas komponentów."
     },
     {
       "name": "Koszmary nocne",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Upiorne wizje dręczą bohatera każdej nocy. Aby wypocząć, musi zdać test Ducha; porażka oznacza brak regeneracji Zmęczenia lub brak Fuksa na sesję."
+      "desc": "Upiorne wizje dręczą bohatera każdej nocy. Musi zdać test Ducha (z karą równą Poziomowi Strachu); porażka oznacza poziom Zmęczenia."
     },
     {
       "name": "Krzykacz",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "horror",
-      "desc": "W obliczu zagrożenia bohater wrzeszczy w niebogłosy. Zdradza pozycję drużyny (kara do Skradania dla wszystkich) i uniemożliwia zaskoczenie wroga."
+      "desc": "Gdy obleje test Strachu (Drobna) lub zawsze gdy wykonuje test Strachu (Poważna), wrzeszczy w niebogłosy, zdradzając pozycję drużyny."
     },
     {
       "name": "Przesądny",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Bohater święcie wierzy w przesądy, znaki zodiaku, rozsypaną sól i czarne koty. Jeśli spotka zły znak, odejmuje 1 od kolejnego testu cechy."
+      "desc": "Bohater święcie wierzy w przesądy, talizmany i rytuały ochronne, które często utrudniają działanie w kryzysowych sytuacjach."
     },
     {
       "name": "Nienaturalny apetyt",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "horror",
-      "desc": "Postać pożąda czegoś dziwnego: surowego mięsa, popiołu, robaków, krwi lub ziemi cmentarnej. Brak zaspokojenia apetytu wywołuje Zmęczenie."
+      "desc": "Postać pożąda czegoś dziwnego: surowego mięsa, robaków lub ziemi. Widok tego wywołuje Rozproszenie (test Ducha)."
     },
     {
       "name": "Urodzona ofiara",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "horror",
-      "desc": "Potwory, mordercy i drapieżniki instynktownie wybierają tego bohatera na swój pierwszy cel w zasadzkach i walkach."
+      "desc": "Potwory i mordercy instynktownie wybierają tego bohatera na swój cel (+1 do trafienia i obrażeń przeciwko niemu)."
     }
   ],
   "edges": [

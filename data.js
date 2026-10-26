@@ -339,6 +339,12 @@ const SW_DATA = {
                 "desc": "Zawsze pomagasz potrzebującym."
         },
         {
+                "name": "Brzydal",
+                "severity": "Drobna/Poważna",
+                "points": "1 lub 2",
+                "desc": "−1 (Drobna) lub −2 (Poważna) do testów Przekonywania ze względu na odpychający wygląd."
+        },
+        {
                 "name": "Chciwy",
                 "severity": "Drobna/Poważna",
                 "points": "1 lub 2",
@@ -367,6 +373,12 @@ const SW_DATA = {
                 "severity": "Drobna",
                 "points": 1,
                 "desc": "Nie umiesz zachować tajemnicy i ciągle zdradzasz sekrety."
+        },
+        {
+                "name": "Dzieciak",
+                "severity": "Drobna/Poważna",
+                "points": "1 lub 2",
+                "desc": "Drobna (12–15 lat): 4 pkt na atrybuty, 10 pkt na umiejętności, +1 Fuks na sesję. Poważna (8–11 lat): 3 pkt na atrybuty, 10 pkt na umiejętności, Zawada Konus (Rozmiar −1, Wytrzymałość −1) i +2 Fuksy na sesję."
         },
         {
                 "name": "Dziwactwo",
@@ -441,6 +453,18 @@ const SW_DATA = {
                 "desc": "−1 do Zastraszania, Przekonywania i Wyśmiewania, bo nie sposób zrozumieć, o co ci chodzi."
         },
         {
+                "name": "Mściwy",
+                "severity": "Drobna/Poważna",
+                "points": "1 lub 2",
+                "desc": "Pragniesz wyrównać rachunki. Drobna: szukasz zemsty w granicach prawa. Poważna: nie cofniesz się przed niczym, by dopełnić zemsty."
+        },
+        {
+                "name": "Na dno!",
+                "severity": "Drobna",
+                "points": 1,
+                "desc": "−2 do testów Wysportowania (pływanie), każdy cal ruchu w wodzie kosztuje 3\" Tempa."
+        },
+        {
                 "name": "Nawyk",
                 "severity": "Drobna/Poważna",
                 "points": "1 lub 2",
@@ -457,6 +481,12 @@ const SW_DATA = {
                 "severity": "Poważna",
                 "points": 2,
                 "desc": "Nie możesz mówić."
+        },
+        {
+                "name": "Niezdecydowany",
+                "severity": "Drobna",
+                "points": 1,
+                "desc": "Ciągniesz dwie Karty Akcji i zatrzymujesz niższą (chyba że wyciągniesz Jokera). Nie możesz posiadać Przewag Błyskawiczny refleks i Opanowany."
         },
         {
                 "name": "Obowiązki",
@@ -507,6 +537,12 @@ const SW_DATA = {
                 "desc": "Dostajesz o jednego Fuksa mniej na początku sesji."
         },
         {
+                "name": "Podejrzliwy",
+                "severity": "Drobna/Poważna",
+                "points": "1 lub 2",
+                "desc": "Jesteś paranoikiem i nikomu nie ufasz. Poważna: sojusznicy mają −2 do testów Wsparcia dla ciebie."
+        },
+        {
                 "name": "Porywczy",
                 "severity": "Poważna",
                 "points": 2,
@@ -528,7 +564,13 @@ const SW_DATA = {
                 "name": "Powolny",
                 "severity": "Drobna/Poważna",
                 "points": "1 lub 2",
-                "desc": "Tempo −1, kość biegania mniejsza o rodzaj."
+                "desc": "Drobna: Tempo −1, kość biegania mniejsza o rodzaj (min. k4). Poważna: Tempo −2, kość biegania −2, −2 do Wysportowania i opierania się Wysportowaniu. Nie można łączyć z Przewagą Chyży."
+        },
+        {
+                "name": "Przygłuchy",
+                "severity": "Drobna/Poważna",
+                "points": "1 lub 2",
+                "desc": "−4 do testów Spostrzegawczości związanych z nasłuchiwaniem (w tym budzenia się). Poważna: jesteś całkowicie głuchy i automatycznie oblewasz testy nasłuchiwania."
         },
         {
                 "name": "Przysięga",
@@ -1718,7 +1760,7 @@ const SW_DATA = {
                                 "desc": "Oddany towarzyszom broni, nigdy ich nie zdradzi."
                         },
                         {
-                                "name": "Uparty",
+                                "name": "Uparciuch",
                                 "severity": "Drobna",
                                 "points": 1,
                                 "desc": "Rzadko ustępuje, zawsze chce postawić na swoim."
@@ -1922,7 +1964,7 @@ const SW_DATA = {
                                 "desc": "Pragnie zbadać każdą starożytną ruinę i tajemnicę."
                         },
                         {
-                                "name": "Wrogość",
+                                "name": "Wróg",
                                 "severity": "Drobna",
                                 "points": 1,
                                 "desc": "Ściga ją gang kłusowników."
@@ -2107,7 +2149,7 @@ const SW_DATA = {
                                 "desc": "-2 do Wigoru przy znoszeniu zmęczenia."
                         },
                         {
-                                "name": "Wścibski",
+                                "name": "Ciekawski",
                                 "severity": "Poważna",
                                 "points": 2,
                                 "desc": "Za wszelką cenę musi poznać sekrety magii."
@@ -2338,7 +2380,7 @@ const SW_DATA = {
                                 "desc": "Często mówi za dużo w najmniej odpowiedniej chwili."
                         },
                         {
-                                "name": "Wrogość",
+                                "name": "Wróg",
                                 "severity": "Drobna",
                                 "points": 1,
                                 "desc": "Szef lokalnego gangu, którego ograł w kości."

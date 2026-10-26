@@ -683,51 +683,107 @@ const FANTASY_DATA = {
   "hindrances": [
     {
       "name": "Podatność na magię",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "fantasy",
-      "desc": "Klątwa rodowa lub nieudany rytuał sprawiły, że ciało bohatera łatwiej ulega mistycznym siłom. Jako Mniejsza: -2 do opierania się mocom. Jako Większa: -4 do obrony przed magią."
+      "desc": "Ciało bohatera łatwiej ulega mistycznym siłom. Drobna: −2 do opierania się wrogim mocom i ich efektom. Poważna: −4 do obrony przed magią."
     },
     {
       "name": "Krępowanie przez pancerz",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "fantasy",
-      "desc": "Wymaga Pochodzenia Niesamowitego. Noszenie pancerza średniego lub ciężkiego nakłada karę -4 na testy czarowania i blokuje przewagi magiczne. Jako Większa dotyczy także pancerzy lekkich."
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Drobna: noszenie średniego lub ciężkiego pancerza daje −4 do testów umiejętności nadprzyrodzonej. Poważna: dotyczy również lekkiego pancerza."
     },
     {
       "name": "Patałach",
-      "type": "Większa",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
       "source": "fantasy",
-      "desc": "Gdy w kluczowej dla siebie umiejętności (np. Rzucanie czarów u maga lub Walka u wojownika) wyrzuci 1 na kości umiejętności, zawsze ponosi Krytyczną Porażkę."
+      "desc": "Gdy w wybranej kluczowej umiejętności wyrzuci 1 na kości umiejętności, ponosi Krytyczną Porażkę nawet wtedy, gdy na Kości Figury wypadło więcej niż 1."
     },
     {
       "name": "Ponurak",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "fantasy",
-      "desc": "Melancholijny i wiecznie posępny bohater. Prowokowany udanym Wyśmiewaniem natychmiast traci panowanie nad sobą."
+      "desc": "Melancholijny i wiecznie posępny bohater. Ma trudności z okazywaniem entuzjazmu i nawiązywaniem ciepłych relacji."
     },
     {
       "name": "Idealista",
-      "type": "Mniejsza",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
       "source": "fantasy",
-      "desc": "Widzi świat w czarno-białych barwach. Wierzy, że dobro zawsze zatriumfuje i nie akceptuje kompromisów moralnych."
+      "desc": "Widzi świat w czarno-białych barwach. Wierzy w wyższe ideały i nie akceptuje moralnie wątpliwych kompromisów."
     },
     {
       "name": "Szowinista",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "fantasy",
-      "desc": "Uważa inne rasy lub narody za gorsze. Otrzymuje karę -2 (lub -4 przy Większej) do relacji z nimi, a przedstawiciele innych ras nie korzystają z jego Przewag Przywódczych."
+      "desc": "Uważa inną kulturę, region lub grupę za gorszą. Drobna: −2 do Przekonywania wobec tej grupy. Poważna: −4 do Przekonywania, a członkowie grupy nie korzystają z jego Przewag Zdolności przywódczych."
     },
     {
       "name": "Talizman",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "fantasy",
-      "desc": "Wymaga Pochodzenia Niesamowitego. Magia wymaga laski, świętego symbolu lub pierścienia. Bez niego rzucanie zaklęć ma karę -1 (lub -2 przy Większej)."
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Bohater skupia magię przez przedmiot. Bez talizmanu otrzymuje karę −2 (Drobna) lub −4 (Poważna) do testów umiejętności nadprzyrodzonej."
     },
     {
       "name": "Bezinteresowny",
-      "type": "Mniejsza/Większa",
+      "severity": "Drobna/Poważna",
+      "type": "Drobna/Poważna",
+      "points": "1 lub 2",
       "source": "fantasy",
-      "desc": "Bohater przedkłada bezpieczeństwo i potrzeby innych nad własne, często oddając ostatni łyk wody lub stając w obronie słabszych za darmo."
+      "desc": "Bohater przedkłada potrzeby innych nad własne (Drobna: wobec przyjaciół i bliskich; Poważna: wobec każdego potrzebującego)."
+    },
+    {
+      "name": "Kochliwy",
+      "severity": "Drobna",
+      "type": "Drobna",
+      "points": 1,
+      "source": "fantasy",
+      "desc": "Bohater łatwo ulega urokowi pięknych osób. Otrzymuje karę −2 do przeciwstawiania się testom postaci z Przewagą Atrakcyjny lub Bardzo atrakcyjny."
+    },
+    {
+      "name": "Splugawienie",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
+      "source": "fantasy",
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Krytyczna porażka w teście magii dodaje nową Drobną Zawadę (lub zwiększa posiadaną do Poważnej) do końca sesji."
+    },
+    {
+      "name": "Przeklęty",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
+      "source": "fantasy",
+      "desc": "Sojusznicy rzucający korzystną magię na przeklętego bohatera odejmują 2 od swoich testów umiejętności nadprzyrodzonej."
+    },
+    {
+      "name": "Przeznaczony na zgubę",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
+      "source": "fantasy",
+      "desc": "Cień śmierci wisi nad bohaterem. Odejmuje 2 od wszystkich testów Wyparowania (Soak rolls)."
+    },
+    {
+      "name": "Komponenty materialne",
+      "severity": "Poważna",
+      "type": "Poważna",
+      "points": 2,
+      "source": "fantasy",
+      "desc": "Wymaga Zdolności nadprzyrodzonych. Bez komponentów −4 do testów mocy. Krytyczna porażka w teście magii niszczy zapas komponentów."
     }
   ],
   "edges": [
